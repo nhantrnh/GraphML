@@ -1,0 +1,45 @@
+% Figure: per-predicate change in R@50 (with constraint) from the released mask to Eq. (5)
+% (Section VIII-B). Message: the largest gains are on frequent predicates, where the released
+% mask biases the gradient most; several less frequent predicates lose recall. Attention predicates,
+% untouched by the patch, move as much, so single-run per-class changes are within noise.
+% Lollipop chart, predicates ordered by training frequency (most frequent on the left).
+% source: experiments/results/impartail_repro/per_class_recall.json (va - goc, with, K=50)
+% and ag_predicate_freq.json (training occurrences). One seed, two epochs.
+\begin{tikzpicture}[x=0.295cm, y=0.042cm, font=\sffamily\scriptsize]
+% dotted grid over the data area only
+\foreach \v in {-40,-20,20,40} \draw[black!30, dotted, line width=0.5pt] (-0.6,\v) -- (25.6,\v);
+\draw[black!60, line width=0.6pt] (-0.6,0) -- (25.6,0);
+\foreach \v/\t in {-40/$-$40,-20/$-$20,0/0,20/+20,40/+40} \node[anchor=east, inner sep=1pt] at (-0.7,\v) {\t};
+\node[rotate=90, anchor=south] at (-2.6,0) {$\Delta$R@50 (points)};
+% predicates: index / label / change
+\foreach \i/\n/\d in {0/in front of/16.7, 1/not looking at/-7.5, 2/holding/42.2, 3/looking at/37.3,
+  4/not contacting/-5.4, 5/on the side of/-23.0, 6/beneath/20.6, 7/touching/-25.0, 8/behind/-20.8,
+  9/unsure/-27.6, 10/sitting on/22.3, 11/in/-5.5, 12/leaning on/-8.8, 13/other/-1.2,
+  14/standing on/-0.2, 15/wearing/-3.1, 16/lying on/-23.7, 17/above/25.3, 18/covered by/-12.3,
+  19/drinking from/-39.8, 20/carrying/19.5, 21/eating/-42.0, 22/writing on/11.6, 23/wiping/11.0,
+  24/have it on back/-1.2, 25/twisting/0.0} {
+  \draw[black!40, line width=0.9pt] (\i,0) -- (\i,\d);
+  \pgfmathparse{\d>=0 ? 1 : 0}
+  \ifnum\pgfmathresult=1
+    \fill[dr] (\i,\d) circle (2.1pt);
+  \else
+    \draw[dr, fill=white, line width=0.9pt] (\i,\d) circle (1.9pt);
+  \fi
+  \node[rotate=65, anchor=east, inner sep=1pt] at (\i,-52) {\n};}
+% attention predicates (indices 1, 3, 9): their CE loss is identical in both branches, so their
+% change measures run-to-run noise; drawn as grey diamonds over the default marks
+\foreach \i/\d in {1/-7.5, 3/37.3, 9/-27.6}
+  \node[diamond, fill=gz!90!black, draw=white, line width=0.6pt, inner sep=0pt, minimum size=6.5pt] at (\i,\d) {};
+% direct labels for the extremes named in the text
+\foreach \i/\d/\t/\a in {2/42.2/+42.2/east, 3/37.3/+37.3/west, 19/-39.8/$-$39.8/east, 21/-42.0/$-$42.0/west}
+  \node[anchor=\a, font=\sffamily\scriptsize, text=dr, inner sep=2pt] at (\i,\d) {\t};
+% frequency direction
+\draw[-{Latex[length=1.6mm]}, black!55, line width=0.6pt] (0,58) -- (25,58)
+  node[pos=0.5, above, font=\sffamily\scriptsize\itshape, text=black!65, inner sep=2pt] {more frequent \quad$\longrightarrow$\quad less frequent};
+% legend in one row below
+\begin{scope}[shift={(16.4,42)}]
+\fill[dr] (0,0) circle (2.1pt); \node[anchor=west, inner sep=2pt] at (0.25,0) {gain};
+\draw[dr, fill=white, line width=0.9pt] (3.4,0) circle (1.9pt); \node[anchor=west, inner sep=2pt] at (3.65,0) {loss};
+\node[diamond, fill=gz!90!black, inner sep=0pt, minimum size=6.5pt] at (0,-8) {}; \node[anchor=west, inner sep=2pt, align=left] at (0.25,-8) {attention: loss unchanged};
+\end{scope}
+\end{tikzpicture}

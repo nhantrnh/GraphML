@@ -1,0 +1,16 @@
+% Figure: long-tail distribution of the 17 contacting predicates in Action Genome (Section VI-A).
+% Message: holding appears 169,741 times and twisting 93 times, a ratio of 1,825:1.
+% source: experiments/results/impartail_repro/ag_predicate_freq.json (training annotations).
+\begin{tikzpicture}
+\begin{axis}[paperchart, width=8.6cm, height=4.4cm, ybar, bar width=7.5pt,
+  ymode=log, log origin=infty, ymin=40, ymax=1e6, clip=false, ytick={1e2,1e3,1e4,1e5},
+  yticklabels={{\sffamily 10\textsuperscript{2}},{\sffamily 10\textsuperscript{3}},{\sffamily 10\textsuperscript{4}},{\sffamily 10\textsuperscript{5}}},
+  symbolic x coords={holding,not contacting,touching,sitting on,leaning on,other,standing on,wearing,lying on,covered by,drinking from,carrying,eating,writing on,wiping,have it on back,twisting},
+  xtick=data, x tick label style={rotate=60, anchor=east, font=\sffamily\scriptsize, inner sep=1pt},
+  ylabel={occurrences (log)}, enlarge x limits=0.04, ymajorgrids, axis x line*=bottom]
+\addplot[fill=db!75, draw=none] coordinates {(holding,169741) (not contacting,117088) (touching,57033) (sitting on,43633) (leaning on,12944) (other,10084) (standing on,9124) (wearing,7611) (lying on,6330) (covered by,5705) (drinking from,4577) (carrying,4430) (eating,3355) (writing on,1159) (wiping,842) (have it on back,358) (twisting,93)};
+\node[font=\sffamily\scriptsize, anchor=south west, inner sep=2pt, xshift=-2pt] at (axis cs:holding,169741) {169,741};
+\node[font=\sffamily\scriptsize, anchor=south, inner sep=2pt] at (axis cs:twisting,93) {93};
+\node[font=\sffamily\scriptsize\bfseries, text=dr, anchor=north east] at (rel axis cs:0.98,0.97) {1,825\,:\,1};
+\end{axis}
+\end{tikzpicture}

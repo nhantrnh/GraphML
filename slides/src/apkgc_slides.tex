@@ -1,0 +1,825 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\usepackage{fontspec}
+\usetheme{Antibes}
+\setbeamertemplate{navigation symbols}{}
+
+% Page number bottom-right
+\setbeamertemplate{footline}{
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.5ex,dp=1.2ex,right]{author in head/foot}%
+      \usebeamerfont{author in head/foot}
+      \insertframenumber{} / \inserttotalframenumber
+      \hspace*{2ex}
+    \end{beamercolorbox}%
+  }%
+}
+
+% Custom headline: project name + section
+\newcommand{\projectname}{APKGC - Noise-enhanced MMKGC with Attention Penalty (AAAI 2025)}
+\setbeamertemplate{headline}{
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.5ex,dp=1.125ex,left]{section in head/foot}%
+      \usebeamerfont{section in head/foot}\hspace*{2ex}\projectname%
+    \end{beamercolorbox}}%
+  \vskip0pt%
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.5ex,dp=1.125ex,left]{subsection in head/foot}%
+      \usebeamerfont{subsection in head/foot}\hspace*{2ex}\insertsectionhead%
+    \end{beamercolorbox}}%
+  \vskip0pt%
+}
+
+% =====================
+% Packages
+% =====================
+\usepackage{amsmath,amsfonts,amssymb}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{pifont}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing,positioning,arrows.meta}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric,backgrounds}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{xcolor}
+
+% =====================
+% Colors
+% =====================
+\definecolor{hcmusblue}{HTML}{1B3A5C}
+\definecolor{contextblue}{HTML}{2E86C1}
+\definecolor{methodteal}{HTML}{16A085}
+\definecolor{objectivepurple}{HTML}{7D3C98}
+\definecolor{riskred}{HTML}{C0392B}
+\definecolor{lightbg}{HTML}{F5F8FC}
+
+\definecolor{GoodGreen}{HTML}{1A6B3C}
+\definecolor{GoodBg}{HTML}{D5EDE0}
+\definecolor{BadRed}{HTML}{A82A1E}
+\definecolor{BadBg}{HTML}{FAE1DE}
+\definecolor{BlueBg}{HTML}{DBE9F8}
+\definecolor{MutedTxt}{HTML}{555555}
+\definecolor{OrangeAc}{HTML}{C05A00}
+
+% Mã màu ba phương thức, dùng nhất quán toàn bài
+\definecolor{structblue}{HTML}{4A7DC0}
+\definecolor{visorange}{HTML}{C05A00}
+\definecolor{textgreen}{HTML}{1A6B3C}
+
+\setbeamercolor{structure}{fg=hcmusblue}
+\setbeamercolor{block title}{fg=white,bg=contextblue}
+\setbeamercolor{block body}{bg=contextblue!7}
+\setbeamercolor{alerted text}{fg=riskred}
+
+% =====================
+% Semantic block environments
+% =====================
+\newenvironment{contextblock}[1]{%
+  \setbeamercolor{block title}{fg=white,bg=contextblue}%
+  \setbeamercolor{block body}{bg=contextblue!7}%
+  \begin{block}{#1}}{\end{block}}
+
+\newenvironment{methodblock}[1]{%
+  \setbeamercolor{block title}{fg=white,bg=methodteal}%
+  \setbeamercolor{block body}{bg=methodteal!7}%
+  \begin{block}{#1}}{\end{block}}
+
+\newenvironment{objectiveblock}[1]{%
+  \setbeamercolor{block title}{fg=white,bg=objectivepurple}%
+  \setbeamercolor{block body}{bg=objectivepurple!7}%
+  \begin{block}{#1}}{\end{block}}
+
+\newenvironment{riskblock}[1]{%
+  \setbeamercolor{block title}{fg=white,bg=riskred}%
+  \setbeamercolor{block body}{bg=riskred!7}%
+  \begin{block}{#1}}{\end{block}}
+
+% =====================
+% Helper commands
+% =====================
+\newcommand{\emphkey}[1]{\textcolor{contextblue}{\textbf{#1}}}
+\newcommand{\emphwarn}[1]{\textcolor{riskred}{\textbf{#1}}}
+\newcommand{\emphok}[1]{\textcolor{methodteal}{\textbf{#1}}}
+\newcommand{\emphobj}[1]{\textcolor{objectivepurple}{\textbf{#1}}}
+\newcommand{\muted}[1]{\textcolor{MutedTxt}{#1}}
+
+\newcommand{\es}{e_{\mathrm{s}}}
+\newcommand{\ev}{e_{\mathrm{v}}}
+\newcommand{\et}{e_{\mathrm{t}}}
+
+% =====================
+% Title
+% =====================
+\title[ImparTail]{Towards Unbiased and Robust Spatio-Temporal\\Scene Graph Generation and Anticipation}
+\subtitle{Peddi, Saurabh, Shrivastava, Singla, Gogate - CVPR 2025 (Highlight)}
+\subtitle{Seminar GraphML - Học phần HP3}
+\author{Nhóm seminar}
+\institute{ĐHQG-HCM - Trường Đại học Khoa học Tự nhiên\\Khoa Công nghệ Thông tin}
+\date{\today}
+\setbeamerfont{title}{series=\bfseries}
+\setbeamerfont{frametitle}{size=\normalsize,series=\bfseries}
+\setbeamerfont{block title}{size=\footnotesize,series=\bfseries}
+\setbeamerfont{block body}{size=\footnotesize}
+\setlength{\medskipamount}{3pt}
+\setlength{\bigskipamount}{6pt}
+
+% Section dividers
+\AtBeginSection[]{
+  \begin{frame}
+    \vfill\centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionhead\par
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+% ── trích dẫn IEEE: đánh số thủ công cho khớp trang tham khảo cuối ──
+\newcommand{\cit}[1]{{\footnotesize\textcolor{hcmusblue}{[#1]}}}
+
+\begin{document}
+
+\begin{frame}[plain]
+\centering
+\vspace{1.2cm}
+{\Large\bfseries APKGC: Noise-enhanced Multi-Modal Knowledge Graph\\[2pt]
+Completion with Attention Penalty}\\[10pt]
+{\normalsize Y. Jian, X. Luo, Z. Li, M. Zhang, Y. Zhang, K. Xiao, X. Hou}\\[2pt]
+{\small Hubei University - \textbf{AAAI 2025}}\\[18pt]
+{\small Trình bày: 25C15053 - Trương Thành Nhân}\\[4pt]
+{\small 29/09/2026}
+\end{frame}
+
+% ══ PHẦN I — THEO CẤU TRÚC BÀI BÁO ════════════════════════════════
+\section{Seminar}
+
+% ── Introduction ──────────────────────────────────────────────────
+\begin{frame}{Background: From KG to MMKGC}
+\vspace{-6pt}
+\centering
+\begin{tikzpicture}[font=\tiny,
+  nd/.style={circle,draw=hcmusblue!80,fill=hcmusblue!15,minimum size=3.2mm,inner sep=0pt},
+  ed/.style={draw=hcmusblue!70},
+  miss/.style={draw=red!70,dashed,thick},
+  ttl/.style={font=\scriptsize\bfseries,text=hcmusblue},
+  arr/.style={-{Latex[length=1.8mm]},draw=black!50,thick},
+  im/.style={draw=black!40,fill=orange!25,minimum width=2.6mm,minimum height=2mm,inner sep=0pt},
+  tx/.style={draw=black!40,fill=green!20,minimum width=2.6mm,minimum height=2mm,inner sep=0pt}]
+% -- 1 KG --
+\begin{scope}[shift={(0,0)}]
+  \node[nd] (a) at (0,0.5) {}; \node[nd] (b) at (1,0.8) {}; \node[nd] (c) at (0.9,-0.1) {}; \node[nd] (d) at (1.7,0.3) {};
+  \draw[ed] (a)--(b); \draw[ed] (a)--(c); \draw[ed] (b)--(d); \draw[ed] (c)--(d);
+  \node[ttl] at (0.85,1.35) {KG};
+  \node[align=center] at (0.85,-0.7) {sự kiện dạng bộ ba\\$(h,\,r,\,t)$};
+\end{scope}
+\draw[arr] (2.05,0.35) -- (2.55,0.35);
+% -- 2 KGC --
+\begin{scope}[shift={(2.9,0)}]
+  \node[nd] (a) at (0,0.5) {}; \node[nd] (b) at (1,0.8) {}; \node[nd] (c) at (0.9,-0.1) {}; \node[nd] (d) at (1.7,0.3) {};
+  \draw[ed] (a)--(b); \draw[ed] (b)--(d); \draw[ed] (c)--(d);
+  \draw[miss] (a)--(c) node[midway,left,text=red!70,font=\scriptsize\bfseries] {?};
+  \node[ttl] at (0.85,1.35) {KGC};
+  \node[align=center] at (0.85,-0.7) {đoán cạnh\\còn thiếu};
+\end{scope}
+\draw[arr] (4.95,0.35) -- (5.45,0.35);
+% -- 3 MMKG --
+\begin{scope}[shift={(5.8,0)}]
+  \node[nd] (a) at (0,0.5) {}; \node[nd] (b) at (1,0.8) {}; \node[nd] (c) at (0.9,-0.1) {}; \node[nd] (d) at (1.7,0.3) {};
+  \draw[ed] (a)--(b); \draw[ed] (a)--(c); \draw[ed] (b)--(d); \draw[ed] (c)--(d);
+  \node[im] at (-0.05,0.85) {}; \node[tx] at (0.28,0.85) {};
+  \node[im] at (1.55,0.75) {}; \node[tx] at (1.88,0.75) {};
+  \node[ttl] at (0.85,1.35) {MMKG};
+  \node[align=center] at (0.85,-0.7) {mỗi thực thể thêm\\\textcolor{orange!80!black}{ảnh} + \textcolor{green!45!black}{văn bản}};
+\end{scope}
+\draw[arr] (7.85,0.35) -- (8.35,0.35);
+% -- 4 MMKGC --
+\begin{scope}[shift={(8.7,0)}]
+  \node[nd] (a) at (0,0.5) {}; \node[nd] (b) at (1,0.8) {}; \node[nd] (c) at (0.9,-0.1) {}; \node[nd] (d) at (1.7,0.3) {};
+  \draw[ed] (a)--(b); \draw[ed] (b)--(d); \draw[ed] (c)--(d);
+  \draw[miss] (a)--(c) node[midway,left,text=red!70,font=\scriptsize\bfseries] {?};
+  \node[im] at (-0.05,0.85) {}; \node[tx] at (0.28,0.85) {};
+  \node[im] at (1.55,0.75) {}; \node[tx] at (1.88,0.75) {};
+  \node[ttl] at (0.85,1.35) {MMKGC};
+  \node[align=center] at (0.85,-0.7) {đoán cạnh thiếu,\\\textbf{dùng cả ảnh + văn bản}};
+  \node[draw=red!65,very thick,rounded corners=3pt,fit={(-0.35,-1.05) (2.1,1.55)},inner sep=0pt] {};
+  \node[font=\tiny\bfseries,text=red!65] at (0.85,-1.25) {APKGC giải bài này};
+\end{scope}
+\end{tikzpicture}
+
+\medskip
+\medskip
+{\footnotesize \textcolor{hcmusblue}{\textbf{$\Rightarrow$}}~APKGC \textbf{không dùng GNN}: đọc văn bản và ảnh bằng Transformer, chấm điểm bằng RotatE~\cit{6}.\footnote{\tiny KG: Knowledge Graph - đồ thị tri thức. KGC: Knowledge Graph Completion - hoàn thiện đồ thị tri thức. MMKG: Multi-Modal Knowledge Graph - đồ thị tri thức đa phương thức. MMKGC: Multi-Modal Knowledge Graph Completion - hoàn thiện đồ thị tri thức đa phương thức. GNN: Graph Neural Network - mạng nơ-ron đồ thị.}}
+\end{frame}
+
+\begin{frame}{Introduction}
+\small
+\textbf{MMKGC}: đoán cạnh thiếu trong đồ thị có thêm \emph{ảnh} + \emph{văn bản}.
+
+\bigskip
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.53\textwidth}
+\begin{block}{(1) Thiếu bền vững}
+Dữ liệu thật đầy nhiễu; các bài trước chỉ \emph{loại bỏ} nhiễu.
+\end{block}
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{block}{(2) Attention over-trust}
+Attention dồn vào token \emph{vô nghĩa}, vd.\ \texttt{[.]}.\footnotemark
+\end{block}
+\end{column}
+\end{columns}
+\footnotetext{\tiny Q. Huang \emph{et al.}, ``OPERA: Alleviating hallucination in multi-modal large language models via over-trust penalty and retrospection-allocation,'' arXiv:2311.17911, 2023.}
+
+
+\medskip
+\centering
+\begin{tikzpicture}
+  \node[draw=black!25,fill=hcmusblue!25,text=black,minimum height=5mm,minimum width=1.03cm,inner sep=1pt,font=\scriptsize] (t0) at (0.52,0) {\strut Dennis};
+  \node[draw=black!25,fill=hcmusblue!30,text=black,minimum height=5mm,minimum width=1.03cm,inner sep=1pt,font=\scriptsize] (t1) at (1.60,0) {\strut Hopper};
+  \node[draw=black!25,fill=hcmusblue!8,text=black,minimum height=5mm,minimum width=0.64cm,inner sep=1pt,font=\scriptsize] (t2) at (2.48,0) {\strut was};
+  \node[draw=black!25,fill=hcmusblue!6,text=black,minimum height=5mm,minimum width=0.55cm,inner sep=1pt,font=\scriptsize] (t3) at (3.12,0) {\strut an};
+  \node[draw=black!25,fill=hcmusblue!22,text=black,minimum height=5mm,minimum width=1.29cm,inner sep=1pt,font=\scriptsize] (t4) at (4.10,0) {\strut American};
+  \node[draw=black!25,fill=hcmusblue!35,text=black,minimum height=5mm,minimum width=0.90cm,inner sep=1pt,font=\scriptsize] (t5) at (5.24,0) {\strut actor};
+  \node[draw=black!25,fill=red!35,text=black,minimum height=5mm,minimum width=0.55cm,inner sep=1pt,font=\scriptsize] (t6) at (6.02,0) {\strut\textbf{\large .}};
+  \node[draw=black!25,fill=hcmusblue!10,text=black,minimum height=5mm,minimum width=0.55cm,inner sep=1pt,font=\scriptsize] (t7) at (6.62,0) {\strut He};
+  \node[draw=black!25,fill=hcmusblue!28,text=black,minimum height=5mm,minimum width=0.64cm,inner sep=1pt,font=\scriptsize] (t8) at (7.26,0) {\strut won};
+  \node[draw=black!25,fill=hcmusblue!38,text=black,minimum height=5mm,minimum width=1.03cm,inner sep=1pt,font=\scriptsize] (t9) at (8.14,0) {\strut awards};
+  \draw[red!75,very thick] (t6.south west) rectangle (t6.north east);
+  \draw[-{Latex[length=1.6mm]},red!75,thick] (t6.north) -- ++(0,0.45) node[above,font=\tiny,red!75] {mô hình dồn chú ý vào đây};
+  \draw[-{Latex[length=1.6mm]},hcmusblue,thick] (t5.south) -- ++(0,-0.4) node[below,font=\tiny,hcmusblue] (lb) {đáng lẽ nhìn vào đây};
+  \draw[-{Latex[length=1.6mm]},hcmusblue,thick] (t9.south) -- ++(0,-0.4);
+\end{tikzpicture}
+
+\medskip
+\centering {\footnotesize \textcolor{hcmusblue}{\textbf{$\Rightarrow$}}~Hai hạn chế \textbf{độc lập} $\to$ hai cơ chế riêng $\to$ đo riêng được.}
+\end{frame}
+
+% ── Method ────────────────────────────────────────────────────────
+\begin{frame}{Related Work}
+\vspace{-4pt}
+\centering
+\begin{tikzpicture}[x=1.2cm,y=0.9cm]
+  \fill[black!45] (0,0.00) rectangle (3.534,-0.24);
+  \node[left,font=\tiny] at (0,-0.12) {RotatE};
+  \node[right,font=\tiny] at (3.534,-0.12) {0,337};
+  \fill[black!45] (0,-0.32) rectangle (3.968,-0.56);
+  \node[left,font=\tiny] at (0,-0.44) {PairRE};
+  \node[right,font=\tiny] at (3.968,-0.44) {0,344};
+  \fill[hcmusblue!75] (0,-0.78) rectangle (2.728,-1.02);
+  \node[left,font=\tiny] at (0,-0.90) {IKRL};
+  \node[right,font=\tiny] at (2.728,-0.90) {0,324};
+  \fill[hcmusblue!75] (0,-1.10) rectangle (3.968,-1.34);
+  \node[left,font=\tiny] at (0,-1.22) {OTKGE};
+  \node[right,font=\tiny] at (3.968,-1.22) {0,344};
+  \fill[hcmusblue!75] (0,-1.42) rectangle (5.332,-1.66);
+  \node[left,font=\tiny] at (0,-1.54) {NativE};
+  \node[right,font=\tiny] at (5.332,-1.54) {0,366};
+  \fill[teal!70!black] (0,-1.88) rectangle (1.798,-2.12);
+  \node[left,font=\tiny] at (0,-2.00) {MANS};
+  \node[right,font=\tiny] at (1.798,-2.00) {0,309};
+  \fill[teal!70!black] (0,-2.20) rectangle (3.782,-2.44);
+  \node[left,font=\tiny] at (0,-2.32) {MMRNS};
+  \node[right,font=\tiny] at (3.782,-2.32) {0,341};
+  \fill[violet!70!black] (0,-2.66) rectangle (4.030,-2.90);
+  \node[left,font=\tiny] at (0,-2.78) {IMF};
+  \node[right,font=\tiny] at (4.030,-2.78) {0,345};
+  \fill[red!70] (0,-3.12) rectangle (4.898,-3.36);
+  \node[left,font=\tiny] at (0,-3.24) {SnAg};
+  \node[right,font=\tiny] at (4.898,-3.24) {0,359};
+  \fill[red!70] (0,-3.44) rectangle (5.828,-3.68);
+  \node[left,font=\tiny] at (0,-3.56) {\textbf{APKGC}};
+  \node[right,font=\tiny] at (5.828,-3.56) {\textbf{0,374}};
+  \node[left,font=\tiny\bfseries,text=black!45,align=right] at (-1.05,-0.40) {Đơn phương thức\\(tham chiếu)};
+  \node[left,font=\tiny\bfseries,text=hcmusblue!75,align=right] at (-1.05,-1.34) {Hợp nhất\\phương thức};
+  \node[left,font=\tiny\bfseries,text=teal!70!black,align=right] at (-1.05,-2.28) {Cải tiến\\mẫu âm};
+  \node[left,font=\tiny\bfseries,text=violet!70!black,align=right] at (-1.05,-2.90) {Kết hợp\\quyết định};
+  \node[left,font=\tiny\bfseries,text=red!70,align=right] at (-1.05,-3.52) {Dùng\\nhiễu};
+  \draw[black!60,dashed] (3.968,0.25) -- (3.968,-3.85);
+  \node[font=\tiny,black!60,above] at (3.968,0.25) {đơn phương thức tốt nhất 0,344};
+  \draw[black!40] (0,-3.85) -- (0,0.15);
+\end{tikzpicture}
+
+{\tiny MRR\footnotemark trên MKG-W, số liệu từ bảng kết quả chính của bài APKGC \cit{1}.}\footnotemark
+
+\smallskip
+{\footnotesize \textcolor{hcmusblue}{\textbf{$\Rightarrow$}}~APKGC đi tiếp hướng \textcolor{red!70}{\textbf{dùng nhiễu}} (SnAg), thêm phạt attention; đạt MRR cao nhất: \textbf{0,374}.}
+\addtocounter{footnote}{-2}
+\stepcounter{footnote}\footnotetext{\tiny MRR: Mean Reciprocal Rank - trung bình nghịch đảo hạng của đáp án đúng, $\mathrm{MRR}=\frac{1}{|Q|}\sum_{q\in Q}\frac{1}{\mathrm{rank}_q}$, trong khoảng $(0,1]$, càng cao càng tốt. Định nghĩa đầy đủ ở slide Experiments.}
+\stepcounter{footnote}\footnotetext{\tiny IKRL: Image-embodied Knowledge Representation Learning; OTKGE: Optimal Transport Knowledge Graph Embedding; MANS: Modality-Aware Negative Sampling; MMRNS: Multi-Modal Relation-enhanced Negative Sampling; IMF: Interactive Multimodal Fusion. RotatE, PairRE, NativE, SnAg là tên riêng của mô hình. Mẫu âm (negative sample): bộ ba sai, tạo bằng cách thay đầu hoặc đuôi của một bộ ba đúng bằng thực thể ngẫu nhiên; mô hình học chấm bộ ba đúng cao hơn mẫu âm.}
+
+\end{frame}
+
+\begin{frame}{Example: Input and Output}
+\vspace{-1pt}
+\centering
+\begin{tikzpicture}[font=\scriptsize,
+  ent/.style={draw=hcmusblue!70,fill=hcmusblue!8,rounded corners=2pt,
+              minimum height=5.5mm,inner sep=3pt,align=center},
+  mod/.style={draw=black!40,fill=black!3,rounded corners=2pt,
+              minimum height=5mm,inner sep=2.5pt,align=center,font=\tiny},
+  fl/.style={-{Latex[length=1.5mm]},draw=black!55}]
+\node[font=\scriptsize\bfseries,hcmusblue] at (1.9,1.55) {ĐẦU VÀO};
+\node[ent,text width=3.2cm] (h) at (1.3,0.8) {National Society of Film\\Critics Award for Best\\Supporting Actor};
+\node[ent] (r) at (3.9,0.8) {award};
+\node[ent,draw=red!60,fill=red!8] (t) at (5.0,0.8) {\textbf{?}};
+\node[mod] (m1) at (1.3,-0.35) {cấu trúc đồ thị: các cạnh đã có};
+\node[mod] (m2) at (1.3,-0.95) {ảnh: bìa sách giải thưởng};
+\node[mod] (m3) at (1.3,-1.55) {văn bản: ``critics award for best supporting''};
+\draw[fl] (h) -- (m1);
+\node[draw=hcmusblue,fill=hcmusblue!12,rounded corners=3pt,
+      minimum height=20mm,minimum width=13mm,align=center,font=\tiny]
+      (mdl) at (6.6,-0.55) {APKGC\\[2pt]\scriptsize hợp nhất\\3 phương thức};
+\draw[fl] (m1) -- (mdl); \draw[fl] (m2) -- (mdl); \draw[fl] (m3) -- (mdl); \draw[fl] (t) -- (mdl);
+\node[font=\scriptsize\bfseries,hcmusblue] at (10.2,1.55) {ĐẦU RA};
+\node[align=left,font=\tiny] (rk) at (10.3,-0.55) {%
+  \begin{tabular}{rl}
+  1. & \textbf{\textcolor{green!45!black}{Dennis Hopper} \checkmark}\\
+  2. & Kurtwood Smith\\
+  3. & James Marsden\\
+  \multicolumn{2}{c}{\dots \; (xếp hạng mọi thực thể)}\\
+  \end{tabular}};
+\draw[fl] (mdl) -- (rk);
+
+\end{tikzpicture}
+
+\vspace{1pt}
+\raggedright\footnotesize
+\centering {\footnotesize \textcolor{hcmusblue}{\textbf{$\Rightarrow$}}~\textbf{MRR} $=\frac{1}{\text{hạng đáp án đúng}}$}
+
+{\tiny Ví dụ lấy từ hình case study của bài APKGC \cit{1}.}
+\end{frame}
+
+\begin{frame}{Overall Architecture (APKGC [1])}
+\vspace{-2pt}
+\centering
+\begin{tikzpicture}[
+  font=\tiny,
+  box/.style={draw=hcmusblue!70,fill=hcmusblue!6,rounded corners=2pt,
+              minimum height=6.5mm,align=center,inner sep=2.5pt},
+  hot/.style={draw=red!65,fill=red!7,rounded corners=2pt,
+              minimum height=6.5mm,align=center,inner sep=2.5pt,very thick},
+  io/.style={draw=black!45,fill=black!4,rounded corners=2pt,
+             minimum height=6mm,align=center,inner sep=2.5pt},
+  fl/.style={-{Latex[length=1.5mm]},draw=black!55},
+  lbl/.style={font=\tiny\bfseries,text=hcmusblue}]
+
+% ── đầu vào ──
+\node[io] (tri) at (0,0) {bộ ba khuyết\\$(h,\,r,\,?)$};
+\node[io] (txt) at (0,-1.0) {văn bản $h_t,r_t,d_h$};
+\node[io] (img) at (0,-1.9) {ảnh $h_v$};
+
+% ── (a) Modality Noise Sampling ──
+\node[box] (bert) at (2.4,-1.0) {BERT\\encoder};
+\node[box] (beit) at (2.4,-1.9) {BeiT\\patch};
+\node[hot] (noise) at (4.6,-1.45) {\textbf{Adaptive}\\\textbf{Noise}\\$\theta_r$ học được};
+
+% ── (b) Entity Feature Extraction ──
+\node[hot] (pen) at (7.0,-1.45) {\textbf{Attention}\\\textbf{Penalty}\\$\phi,\theta_p,k$ cố định};
+\node[box] (enc) at (9.2,-1.45) {Transformer\\$H_t,\,H_v$};
+
+% ── (c) Triple Score and Prediction ──
+\node[box] (inter) at (11.3,-1.45) {Modality\\Interaction\\$\theta_{ab}$};
+\node[io]  (score) at (11.3,-0.1) {điểm số\\mọi ứng viên};
+
+\draw[fl] (tri) -- (txt);
+\draw[fl] (txt) -- (bert);
+\draw[fl] (img) -- (beit);
+\draw[fl] (bert) -- (noise);
+\draw[fl] (beit) -- (noise);
+\draw[fl] (noise) -- (pen);
+\draw[fl] (pen) -- (enc);
+\draw[fl] (enc) -- (inter);
+\draw[fl] (inter) -- (score);
+
+% nhãn ba module
+\node[lbl] at (3.5,-2.75) {(a) Modality Noise Sampling};
+\node[lbl] at (8.1,-2.75) {(b) Entity Feature Extraction};
+\node[lbl] at (11.3,-2.75) {(c) Triple Score};
+
+\begin{scope}[on background layer]
+  \draw[hcmusblue!25,rounded corners=3pt,dashed]
+    (1.45,-2.55) rectangle (5.6,-0.45);
+  \draw[hcmusblue!25,rounded corners=3pt,dashed]
+    (6.0,-2.55) rectangle (10.2,-0.45);
+  \draw[hcmusblue!25,rounded corners=3pt,dashed]
+    (10.4,-2.55) rectangle (12.3,-0.45);
+\end{scope}
+\end{tikzpicture}
+
+\vspace{2pt}
+\raggedright\footnotesize
+\centering {\footnotesize \textcolor{hcmusblue}{\textbf{$\Rightarrow$}}~\textcolor{red!65}{\textbf{Khối đỏ}} = hai đóng góp, ở \textbf{hai module khác nhau}. {\scriptsize Bộ mã hoá: BERT\footnote{\tiny BERT: Bidirectional Encoder Representations from Transformers. J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, ``BERT: Pre-training of deep bidirectional transformers for language understanding,'' in \emph{Proc. NAACL-HLT}, 2019, pp.~4171-4186.}, BEiT\footnote{\tiny BEiT: Bidirectional Encoder representation from Image Transformers. H. Bao, L. Dong, S. Piao, and F. Wei, ``BEiT: BERT pre-training of image transformers,'' in \emph{Proc. ICLR}, 2022.}.}}
+\end{frame}
+
+\begin{frame}{Data Flow: 10 Steps}
+\vspace{-4pt}
+\centering
+\begin{tikzpicture}[
+  st/.style={draw,rounded corners=2pt,minimum height=11mm,text width=19mm,align=center,inner sep=2pt,font=\scriptsize},
+  A/.style={st,draw=hcmusblue!70,fill=hcmusblue!8},
+  B/.style={st,draw=green!45!black,fill=green!8},
+  C/.style={st,draw=orange!80!black,fill=orange!10},
+  hot/.style={very thick,draw=red!70,fill=red!10},
+  fl/.style={-{Latex[length=1.6mm]},draw=black!55},
+  sy/.style={font=\tiny,text=black!50}]
+\node[A] (1) at (0,0)    {\textbf{1.}~Gom thông tin\\[-1pt]{\tiny\color{black!50}văn bản + ảnh}};
+\node[A,hot] (2) at (2.55,0) {\textbf{2.}~\textbf{Thêm nhiễu}\\[-1pt]{\tiny\color{black!50}đóng góp 1}};
+\node[A] (3) at (5.1,0)  {\textbf{3.}~Cắt thành token\\[-1pt]{\tiny\color{black!50}từng chữ / mảnh ảnh}};
+\node[B] (4) at (7.65,0) {\textbf{4.}~Tính mức chú ý\\[-1pt]{\tiny\color{black!50}attention}};
+\node[B,hot] (5) at (10.2,0) {\textbf{5.}~\textbf{Phạt chú ý nhầm}\\[-1pt]{\tiny\color{black!50}đóng góp 2}};
+\node[B] (6) at (10.2,-1.75) {\textbf{6.}~Mã hoá\\[-1pt]{\tiny\color{black!50}thành vector}};
+\node[C] (7) at (7.65,-1.75) {\textbf{7.}~Trộn văn bản + ảnh};
+\node[C] (8) at (5.1,-1.75)  {\textbf{8.}~Chuẩn hoá};
+\node[C] (9) at (2.55,-1.75) {\textbf{9.}~Chấm điểm\\[-1pt]{\tiny\color{black!50}dùng lại \textbf{RotatE}}};
+\node[C] (10) at (0,-1.75)   {\textbf{10.}~Tính sai số\\[-1pt]{\tiny\color{black!50}để mô hình học}};
+\foreach \a/\b in {1/2,2/3,3/4,4/5,5/6,6/7,7/8,8/9,9/10} \draw[fl] (\a)--(\b);
+\node[font=\tiny\bfseries,text=hcmusblue] at (2.55,0.85) {(a) tạo đầu vào};
+\node[font=\tiny\bfseries,text=green!40!black] at (8.9,0.85) {(b) trích đặc trưng};
+\node[font=\tiny\bfseries,text=orange!80!black] at (5.1,-2.6) {(c) chấm điểm và huấn luyện};
+\end{tikzpicture}
+
+\medskip
+{\footnotesize \textcolor{hcmusblue}{\textbf{$\Rightarrow$}}~Trong 10 bước, chỉ \textcolor{red!70}{\textbf{2 ô đỏ}} là mới. Bước chấm điểm dùng lại \textbf{RotatE}~\cit{6} - phương pháp cũ (một mình đạt MRR 0,337 trên MKG-W, APKGC đạt 0,374).}
+
+\smallskip
+\begin{block}{Bước 9-10: chấm điểm và hàm loss}
+\scriptsize
+\textbf{(19)} Điểm $S=\lVert h\circ r-t\rVert$: quay $h$ theo $r$ rồi đo khoảng cách tới $t$; \textbf{nhỏ = đúng}.\\
+\textbf{(20)} Loss: \textbf{kéo} bộ ba đúng lại gần, \textbf{đẩy} bộ ba sai (mẫu âm) ra xa. Mọi tham số, kể cả $\theta_r$, được học bằng cách giảm loss này.
+\end{block}
+\end{frame}
+
+\begin{frame}{Method: Adaptive Noise Sampling}
+\small
+\centering\textbf{Không lọc nhiễu - cố ý thêm nhiễu} lúc huấn luyện (APKGC \cit{1}).
+
+\medskip
+\begin{tikzpicture}[
+  bx/.style={draw=hcmusblue!70,fill=hcmusblue!8,rounded corners=3pt,align=center,inner sep=4pt},
+  mg/.style={draw=red!70,fill=red!8,very thick,rounded corners=3pt,align=center,inner sep=5pt},
+  fl/.style={-{Latex[length=2mm]},draw=hcmusblue!70,line width=1.2pt}]
+\node[bx] (g) at (-3.4,0) {\scriptsize\textbf{nhiễu Gauss} (3) {\tiny phân phối chuẩn}\\[2pt]
+  $N_g=\theta_r(\varphi_m\odot g+\mu_m)$\\[1pt]{\tiny ngẫu nhiên, quanh trung bình dữ liệu}};
+\node[bx] (a) at (3.4,0) {\scriptsize\textbf{nhiễu phân phối đều} (4) {\tiny bài gọi ``average''}\\[2pt]
+  $N_a=\theta_r[\beta_{\min}+(\beta_{\max}-\beta_{\min})\odot U]$\\[1pt]{\tiny mượt hơn, ít giá trị ngoại lai}};
+\node[mg] (v) at (0,-2.05) {\scriptsize\textbf{trộn nhiễu vào vector} (5)\\[3pt]
+  $V_n=\begin{cases}(1-\theta_r)\,V_o+N_m & \text{nếu } \rho>\theta_n\\ V_o & \text{ngược lại}\end{cases}$};
+\draw[fl] (g.south) to[out=-90,in=160] node[pos=0.55,left,font=\tiny,text=black!60] {chọn 1 trong 2 tuỳ bộ dữ liệu} (v.north west);
+\draw[fl] (a.south) to[out=-90,in=20] (v.north east);
+\end{tikzpicture}
+
+\medskip
+{\tiny\color{black!70}
+\begin{tabular}{@{}ll@{\qquad}ll@{}}
+$V_o$ & vector gốc của thực thể & $\theta_r$ & tỉ lệ nhiễu - \textbf{học được}\\
+$V_n$ & vector sau khi thêm nhiễu & $\rho$ & số ngẫu nhiên trong $[0,1]$ cho mỗi thực thể\\
+$N_m$ & bài: DB15K dùng $N_g$, MKG-W dùng $N_a$ & $\theta_n$ & ngưỡng lấy mẫu\\
+\end{tabular}}
+
+\medskip
+{\footnotesize \textcolor{hcmusblue}{\textbf{$\Rightarrow$}}~Thực thể có $\rho>\theta_n$ được trộn nhiễu theo tỉ lệ $\theta_r$ (\textbf{học được}).}
+\end{frame}
+
+\begin{frame}{Method: Attention Penalty}
+\small
+\centering
+\begin{tikzpicture}[
+  bx/.style={draw=hcmusblue!70,fill=hcmusblue!8,rounded corners=3pt,align=center,inner sep=4pt,font=\scriptsize},
+  fl/.style={-{Latex[length=2mm]},draw=hcmusblue!70,line width=1.2pt}]
+\node[bx] (p) at (0,0) {\textbf{\ding{172} Phạt} (9)\\[2pt]$A^p_j=A^p_i-\theta_p A^p_i$ \;nếu\; $A^p_i>\phi$\\[1pt]{\tiny token có attention vượt \textbf{ngưỡng chú ý} $\phi$ bị giảm bớt}};
+\node[bx] (r) at (6.3,0) {\textbf{\ding{173} Chia lại} (10)\\[2pt]$A^n_j=A^n_i+\theta^n_j(A^p_i-\phi)$, \;$n\in(p{-}k,p{+}k)$\\[1pt]{\tiny phần dư trên $\phi$ chia cho $k$ token lân cận}};
+\draw[fl] (p.east)--(r.west) node[midway,above,font=\tiny,text=black!60] {phần cắt ra};
+\end{tikzpicture}\par
+{\tiny\color{black!70} $p$: vị trí token bị phạt; $n\in(p{-}k,p{+}k)$: token lân cận; $k$: kích thước cửa sổ; chỉ số $i$/$j$: trước/sau khi điều chỉnh; $\theta_p$: tỉ lệ phạt; $\theta^n_j$: trọng số chia lại.\\ Nguồn: công thức (9)(10) bài APKGC \cit{1}, tr.\,15007.}\par
+
+\vspace{12pt}
+\centering
+\begin{tikzpicture}[font=\tiny]
+  % Hinh 4 cua [1]: hang tren = truoc khi phat, hang duoi = sau khi phat
+  \foreach \x/\u/\w/\l in {0/0.02/0.05/critics, 1/0.08/0.11/award,
+                           2/0.66/0.50/{\textbf{for}}, 3/0.20/0.21/best,
+                           4/0.11/0.14/supporting} {
+    \fill[black!18] (\x*1.2,0) rectangle (\x*1.2+0.42,\u*2.1);
+    \node[above,font=\tiny,black!55] at (\x*1.2+0.21,\u*2.1) {\u};
+    \fill[hcmusblue!75] (\x*1.2+0.46,0) rectangle (\x*1.2+0.88,\w*2.1);
+    \node[above,font=\tiny,hcmusblue] at (\x*1.2+0.67,\w*2.1) {\w};
+    \node[below,font=\tiny] at (\x*1.2+0.44,0) {\l};
+  }
+  \fill[red!55] (2.4,0) rectangle (2.82,0.66*2.1);
+  \draw[black!50] (-0.15,0) -- (5.95,0);
+  \draw[red!70,dashed] (-0.15,1.05) -- (5.95,1.05) node[right,font=\tiny,red!70] {ngưỡng 0,5};
+  \node[font=\tiny,align=left,right] at (6.9,0.95)
+    {\textcolor{red!70}{\textbf{``for''} 0,66 - \emph{over-trust}}\\[1pt]
+     \textcolor{black!55}{$\blacksquare$} trước khi phạt\\
+     \textcolor{hcmusblue!75}{$\blacksquare$} sau khi phạt:\\
+     \quad ``for'' bị cắt xuống 0,5,\\
+     \quad chữ lân cận nhích lên};
+\end{tikzpicture}
+\hfill{\tiny Số liệu: case study của bài APKGC \cit{1}.}
+
+\medskip
+\centering {\footnotesize \textcolor{hcmusblue}{\textbf{$\Rightarrow$}}~$\phi,\theta_p,k$ \textbf{cố định}, phải dò tay (RQ4\footnote{\tiny RQ4: Research Question 4 - câu hỏi nghiên cứu thứ tư của bài, về ảnh hưởng của siêu tham số.}) - khác $\theta_r$ học được.}
+\end{frame}
+
+% ── Experiments ───────────────────────────────────────────────────
+\begin{frame}{Experiments from the Paper}
+\footnotesize
+\begin{columns}[T]
+\begin{column}{0.50\textwidth}
+\centering
+{\scriptsize
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccc}
+\toprule
+\textbf{Bộ dữ liệu} & \textbf{MRR} & \textbf{H@1} & \textbf{H@3} & \textbf{H@10}\\
+\midrule
+MKG-W & 0,374 & 0,306 & 0,404 & 0,501\\
+DB15K & 0,364 & 0,282 & 0,413 & 0,527\\
+\bottomrule
+\end{tabular*}}
+
+{\tiny Nguồn: bài APKGC \cit{1}. Bộ dữ liệu: MKG-W từ MMRNS \cit{4}, DB15K từ MMKG \cit{3}.}
+
+\medskip
+{\scriptsize
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcc}
+\toprule
+& \textbf{bài APKGC} \cit{1} & \textbf{tự tái lập}\\
+\midrule
+GPU\footnotemark & RTX 4090 & Kaggle Tesla T4\\
+batch & 2048 & 1024 $\to$ 2048\\
+số seed & không nêu & 3\\
+\bottomrule
+\end{tabular*}}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{Hai metric - cách tính}
+\scriptsize
+Với mỗi truy vấn $q=(h,r,?)$, mô hình xếp hạng \emph{mọi} thực thể;
+$\mathrm{rank}_q$ là hạng của đáp án đúng.
+
+\smallskip
+\textbf{MRR} (Mean Reciprocal Rank):
+\[\mathrm{MRR}=\frac{1}{|Q|}\sum_{q\in Q}\frac{1}{\mathrm{rank}_q}\]
+Hạng 1 $\to$ 1; hạng 2 $\to$ 0,5. Càng cao càng tốt.
+
+\smallskip
+\textbf{Hits@K} (H@K) - tỉ lệ truy vấn có đáp án đúng trong top $K$:
+\[\mathrm{H@}K=\frac{1}{|Q|}\sum_{q\in Q}\mathbf{1}\left[\mathrm{rank}_q\le K\right]\]
+\end{block}
+\end{column}
+\end{columns}
+
+\footnotetext{\tiny GPU: Graphics Processing Unit - bộ xử lý đồ hoạ, dùng để huấn luyện mô hình.}
+
+\medskip
+{\footnotesize \textcolor{hcmusblue}{\textbf{$\Rightarrow$}}~\textbf{Không có độ lệch chuẩn} - mà hơn NativE \cit{2} (DB15K) chỉ \textbf{0,002}.}
+\end{frame}
+
+% ── Limitations & Conclusion ──────────────────────────────────────
+\begin{frame}{Experiments: Hyper-parameter Analysis (RQ4)}
+\small
+\centering
+\begin{tikzpicture}
+\node[font=\scriptsize\bfseries] at (1.90,2.35) {DB15K (MRR)};
+\node[font=\tiny,left] at (0.00,1.89) {4};
+\fill[hcmusblue!44] (0.00,1.68) rectangle (0.95,2.10); \node[font=\tiny,text=black] at (0.47,1.89) {0{,}345};
+\fill[hcmusblue!41] (0.95,1.68) rectangle (1.90,2.10); \node[font=\tiny,text=black] at (1.42,1.89) {0{,}343};
+\fill[hcmusblue!16] (1.90,1.68) rectangle (2.85,2.10); \node[font=\tiny,text=black] at (2.38,1.89) {0{,}329};
+\fill[hcmusblue!8] (2.85,1.68) rectangle (3.80,2.10); \node[font=\tiny,text=black] at (3.32,1.89) {0{,}324};
+\node[font=\tiny,left] at (0.00,1.47) {3};
+\fill[hcmusblue!50] (0.00,1.26) rectangle (0.95,1.68); \node[font=\tiny,text=black] at (0.47,1.47) {0{,}348};
+\fill[hcmusblue!57] (0.95,1.26) rectangle (1.90,1.68); \node[font=\tiny,text=white] at (1.42,1.47) {0{,}352};
+\fill[hcmusblue!39] (1.90,1.26) rectangle (2.85,1.68); \node[font=\tiny,text=black] at (2.38,1.47) {0{,}342};
+\fill[hcmusblue!22] (2.85,1.26) rectangle (3.80,1.68); \node[font=\tiny,text=black] at (3.32,1.47) {0{,}332};
+\node[font=\tiny,left] at (0.00,1.05) {2};
+\fill[hcmusblue!53] (0.00,0.84) rectangle (0.95,1.26); \node[font=\tiny,text=black] at (0.47,1.05) {0{,}35};
+\fill[hcmusblue!64] (0.95,0.84) rectangle (1.90,1.26); \node[font=\tiny,text=white] at (1.42,1.05) {0{,}356};
+\fill[hcmusblue!78] (1.90,0.84) rectangle (2.85,1.26); \node[font=\tiny,text=white] at (2.38,1.05) {\textbf{0{,}364}};
+\fill[hcmusblue!18] (2.85,0.84) rectangle (3.80,1.26); \node[font=\tiny,text=black] at (3.32,1.05) {0{,}33};
+\node[font=\tiny,left] at (0.00,0.63) {1};
+\fill[hcmusblue!18] (0.00,0.42) rectangle (0.95,0.84); \node[font=\tiny,text=black] at (0.47,0.63) {0{,}33};
+\fill[hcmusblue!51] (0.95,0.42) rectangle (1.90,0.84); \node[font=\tiny,text=black] at (1.42,0.63) {0{,}349};
+\fill[hcmusblue!58] (1.90,0.42) rectangle (2.85,0.84); \node[font=\tiny,text=white] at (2.38,0.63) {0{,}353};
+\fill[hcmusblue!43] (2.85,0.42) rectangle (3.80,0.84); \node[font=\tiny,text=black] at (3.32,0.63) {0{,}344};
+\node[font=\tiny,left] at (0.00,0.21) {0};
+\fill[hcmusblue!36] (0.00,0.00) rectangle (0.95,0.42); \node[font=\tiny,text=black] at (0.47,0.21) {0{,}34};
+\fill[hcmusblue!36] (0.95,0.00) rectangle (1.90,0.42); \node[font=\tiny,text=black] at (1.42,0.21) {0{,}34};
+\fill[hcmusblue!36] (1.90,0.00) rectangle (2.85,0.42); \node[font=\tiny,text=black] at (2.38,0.21) {0{,}34};
+\fill[hcmusblue!36] (2.85,0.00) rectangle (3.80,0.42); \node[font=\tiny,text=black] at (3.32,0.21) {0{,}34};
+\draw[red!70,thick,dashed] (0.00,0) rectangle (3.80,0.42);
+\node[font=\tiny,below] at (0.47,0) {$10^{-4}$};
+\node[font=\tiny,below] at (1.42,0) {0,001};
+\node[font=\tiny,below] at (2.38,0) {0,01};
+\node[font=\tiny,below] at (3.32,0) {0,1};
+\node[font=\tiny] at (1.90,-0.55) {tỉ lệ phạt $\theta_p$};
+\node[font=\tiny,rotate=90] at (-0.45,1.05) {cửa sổ $k$};
+\node[font=\scriptsize\bfseries] at (7.20,2.35) {MKG-W (H@10)};
+\node[font=\tiny,left] at (5.30,1.89) {4};
+\fill[hcmusblue!42] (5.30,1.68) rectangle (6.25,2.10); \node[font=\tiny,text=black] at (5.77,1.89) {0{,}49};
+\fill[hcmusblue!25] (6.25,1.68) rectangle (7.20,2.10); \node[font=\tiny,text=black] at (6.72,1.89) {0{,}485};
+\fill[hcmusblue!18] (7.20,1.68) rectangle (8.15,2.10); \node[font=\tiny,text=black] at (7.67,1.89) {0{,}483};
+\fill[hcmusblue!11] (8.15,1.68) rectangle (9.10,2.10); \node[font=\tiny,text=black] at (8.62,1.89) {0{,}481};
+\node[font=\tiny,left] at (5.30,1.47) {3};
+\fill[hcmusblue!56] (5.30,1.26) rectangle (6.25,1.68); \node[font=\tiny,text=white] at (5.77,1.47) {0{,}494};
+\fill[hcmusblue!45] (6.25,1.26) rectangle (7.20,1.68); \node[font=\tiny,text=black] at (6.72,1.47) {0{,}491};
+\fill[hcmusblue!38] (7.20,1.26) rectangle (8.15,1.68); \node[font=\tiny,text=black] at (7.67,1.47) {0{,}489};
+\fill[hcmusblue!25] (8.15,1.26) rectangle (9.10,1.68); \node[font=\tiny,text=black] at (8.62,1.47) {0{,}485};
+\node[font=\tiny,left] at (5.30,1.05) {2};
+\fill[hcmusblue!59] (5.30,0.84) rectangle (6.25,1.26); \node[font=\tiny,text=white] at (5.77,1.05) {0{,}495};
+\fill[hcmusblue!42] (6.25,0.84) rectangle (7.20,1.26); \node[font=\tiny,text=black] at (6.72,1.05) {0{,}49};
+\fill[hcmusblue!73] (7.20,0.84) rectangle (8.15,1.26); \node[font=\tiny,text=white] at (7.67,1.05) {0{,}499};
+\fill[hcmusblue!35] (8.15,0.84) rectangle (9.10,1.26); \node[font=\tiny,text=black] at (8.62,1.05) {0{,}488};
+\node[font=\tiny,left] at (5.30,0.63) {1};
+\fill[hcmusblue!52] (5.30,0.42) rectangle (6.25,0.84); \node[font=\tiny,text=black] at (5.77,0.63) {0{,}493};
+\fill[hcmusblue!62] (6.25,0.42) rectangle (7.20,0.84); \node[font=\tiny,text=white] at (6.72,0.63) {0{,}496};
+\fill[hcmusblue!80] (7.20,0.42) rectangle (8.15,0.84); \node[font=\tiny,text=white] at (7.67,0.63) {\textbf{0{,}501}};
+\fill[hcmusblue!49] (8.15,0.42) rectangle (9.10,0.84); \node[font=\tiny,text=black] at (8.62,0.63) {0{,}492};
+\node[font=\tiny,left] at (5.30,0.21) {0};
+\fill[hcmusblue!45] (5.30,0.00) rectangle (6.25,0.42); \node[font=\tiny,text=black] at (5.77,0.21) {0{,}491};
+\fill[hcmusblue!45] (6.25,0.00) rectangle (7.20,0.42); \node[font=\tiny,text=black] at (6.72,0.21) {0{,}491};
+\fill[hcmusblue!45] (7.20,0.00) rectangle (8.15,0.42); \node[font=\tiny,text=black] at (7.67,0.21) {0{,}491};
+\fill[hcmusblue!45] (8.15,0.00) rectangle (9.10,0.42); \node[font=\tiny,text=black] at (8.62,0.21) {0{,}491};
+\draw[red!70,thick,dashed] (5.30,0) rectangle (9.10,0.42);
+\node[font=\tiny,below] at (5.77,0) {$10^{-4}$};
+\node[font=\tiny,below] at (6.72,0) {0,001};
+\node[font=\tiny,below] at (7.67,0) {0,01};
+\node[font=\tiny,below] at (8.62,0) {0,1};
+\node[font=\tiny] at (7.20,-0.55) {tỉ lệ phạt $\theta_p$};
+\node[font=\tiny,rotate=90] at (4.85,1.05) {cửa sổ $k$};
+\end{tikzpicture}
+
+\smallskip
+{\tiny\color{black!70} Ô đậm hơn = điểm cao hơn; khung đỏ nét đứt: $k=0$, tức không phạt. Số liệu: hình phân tích siêu tham số của bài APKGC \cit{1}.}
+
+\medskip
+{\scriptsize \textcolor{hcmusblue}{\textbf{$\Rightarrow$}}~Trên DB15K, MRR thay đổi từ \textbf{0,324} đến \textbf{0,364} theo $k$ và $\theta_p$ $\to$ kết quả \textbf{nhạy} với siêu tham số, phải dò thủ công.}
+\end{frame}
+
+\begin{frame}{Limitations \& Conclusion}
+\small
+\centering
+{\scriptsize Bài APKGC \cit{1} \textbf{không có mục Limitations}. Future work: thêm video/âm thanh.}
+
+\medskip
+\centering
+\begin{tabular}{>{\raggedright\arraybackslash}p{7.0cm}}
+\toprule
+\textbf{Hạn chế}\\
+\midrule
+Không báo cáo độ lệch chuẩn\\
+\addlinespace
+Chưa tách bạch đóng góp của từng cơ chế\\
+\addlinespace
+$\phi,\theta_p,k$ phải dò thủ công (RQ4)\\
+\bottomrule
+\end{tabular}
+
+
+\end{frame}
+
+% ══ PHẦN II — TÁI LẬP VÀ PHÂN TÍCH ════════════════════════════════
+\section{Reproduction \& Analysis}
+
+\begin{frame}{1. Reproducing the Published Results}
+\small
+\centering
+\begin{tikzpicture}[font=\scriptsize]
+  % MRR tren MKG-W; truc 0,34 -> 0,38 = 0..8 cm
+  \draw[black!40] (0,-0.1) -- (0,-2.35);
+  \foreach \v/\lb in {0.34/0{,}34, 0.36/0{,}36, 0.38/0{,}38}
+    \draw[black!40] ({(\v-0.34)/0.04*8},-2.35) -- ++(0,-0.08) node[below,font=\tiny,black!60]{\lb};
+  \fill[hcmusblue!75] (0,-0.2) rectangle (6.80,-0.6);
+  \node[left,align=right] at (0,-0.4) {Công bố \cit{1}};
+  \node[right] at (6.80,-0.4) {\textbf{0,374}};
+  \fill[black!40] (0,-0.95) rectangle (4.10,-1.35);
+  \draw[black!80,thick] (3.92,-1.15) -- (4.28,-1.15);
+  \node[left,align=right] at (0,-1.15) {Tái lập - cấu hình mã công bố \cit{5}\\[-2pt]{\tiny batch 1024, 32 mẫu âm; 3 seed}};
+  \node[right] at (4.30,-1.15) {0,3605 $\pm$ 0,0009};
+  \fill[orange!85!black] (0,-1.7) rectangle (5.82,-2.1);
+  \node[left,align=right] at (0,-1.9) {Tái lập - cấu hình theo bài \cit{1}\\[-2pt]{\tiny batch 2048, 64 mẫu âm}};
+  \node[right] at (5.82,-1.9) {\textbf{0,3691}};
+  \node[font=\tiny,black!60] at (4,-2.85) {MRR trên MKG-W (trục bắt đầu từ 0,34)};
+\end{tikzpicture}
+
+\medskip
+{\footnotesize
+\begin{tabular}{lccc}
+\toprule
+& \textbf{Công bố} \cit{1} & \textbf{Tái lập (mã công bố)} & \textbf{std}\footnotemark\\
+\midrule
+MKG-W, H@1  & 0,306 & 0,2952 & 0,0032\\
+MKG-W, H@10 & 0,501 & 0,4792 & 0,0030\\
+\bottomrule
+\end{tabular}}
+
+\footnotetext{\tiny std: độ lệch chuẩn mẫu qua $n=3$ seed, $s=\sqrt{\frac{1}{n-1}\sum_{i}(x_i-\bar{x})^2}$. Chênh lệch dưới $3s$ được xem là chưa phân biệt được với biến động ngẫu nhiên.}
+\vfill
+{\tiny\color{black!60} Notebook: \url{https://www.kaggle.com/code/nhantrnh/apkgc-remaining-exp}}
+\end{frame}
+
+\begin{frame}{2. Second Dataset: DB15K}
+\small
+\centering
+\begin{tikzpicture}[font=\scriptsize,x=0.015cm,y=9cm]
+  % x: epoch 0..600 (0,015 cm/epoch); y: MRR 0..0,40 (9 cm / 1,0)
+  \draw[->,black!55] (0,0) -- (640,0) node[right,font=\tiny]{epoch};
+  \draw[->,black!55] (0,0) -- (0,0.41) node[above,font=\tiny]{MRR};
+  \foreach \v/\lb in {0.1/0{,}1, 0.2/0{,}2, 0.3/0{,}3}
+    \draw[black!15] (0,\v) -- (620,\v) node[pos=0,left,font=\tiny,black!60]{\lb};
+  \foreach \e in {100,200,300,400,500,600}
+    \node[below,font=\tiny,black!60] at (\e,0) {\e};
+  \draw[hcmusblue,dashed,thick] (0,0.364) -- (620,0.364) node[right,font=\tiny,hcmusblue]{công bố \cit{1}: 0,364};
+  \draw[orange!85!black,very thick] (50,0.0623) -- (100,0.1159) -- (150,0.2402) -- (200,0.3095) -- (250,0.3237) -- (300,0.3292) -- (350,0.3340) -- (400,0.3408) -- (450,0.3430) -- (500,0.3448) -- (550,0.3468) -- (600,0.3469);
+  \foreach \e/\m in {50/0.0623,100/0.1159,150/0.2402,200/0.3095,250/0.3237,300/0.3292,350/0.3340,400/0.3408,450/0.3430,500/0.3448,550/0.3468,600/0.3469}
+    \fill[orange!85!black] (\e,\m) circle (1.3pt);
+  \node[below,font=\tiny,orange!85!black] at (560,0.335) {tái lập: 0,3469};
+\end{tikzpicture}
+
+\medskip
+{\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+& \textbf{MRR} & \textbf{H@1} & \textbf{H@3} & \textbf{H@10}\\
+\midrule
+Công bố \cit{1} & 0,364 & 0,282 & 0,413 & 0,527\\
+Tái lập (600 epoch, seed 42) & 0,3469 & 0,2591 & 0,3939 & 0,5132\\
+\bottomrule
+\end{tabular}}
+
+\medskip
+{\footnotesize \textcolor{hcmusblue}{\textbf{$\Rightarrow$}}~Trên DB15K, kết quả tái lập thấp hơn công bố cùng chiều với MKG-W; 50 epoch cuối chỉ tăng 0,0001.}
+
+\vfill
+{\tiny\color{black!60} Notebook: \url{https://www.kaggle.com/code/thnhnhntrng/apkgc-db15k-capped}}
+\end{frame}
+
+\begin{frame}{3. Attention Penalty: Four Implementations}
+\small
+\vspace{8pt}
+\centering
+{\footnotesize
+\begin{tabular}{llc}
+\toprule
+& \textbf{Biến thể cài đặt} & \textbf{MRR}\\
+\midrule
+A & mã công bố \cit{5} & 0,3629\\
+B & công thức (9)(10) \cit{1} & 0,3629\\
+C & ngưỡng entropy, 10\% thấp nhất (đề xuất) & 0,3630\\
+B2 & cắt xác suất ở 0,5 (case study \cit{1}) & 0,3605\\
+\bottomrule
+\end{tabular}}
+
+\smallskip
+{\scriptsize Không biến thể nào cải thiện MRR so với A.}
+
+\vfill
+{\tiny\color{black!60} Notebook: \url{https://www.kaggle.com/code/thnhnhntrng/apkgc-three-branch} · \url{https://www.kaggle.com/code/thnhnhntrng/apkgc-entropy-c} · \url{https://www.kaggle.com/code/nhantrnh/apkgc-cap-prob} · \url{https://www.kaggle.com/code/thnhnhntrng/apkgc-attn-probe}}
+\end{frame}
+
+\begin{frame}{Conclusion}
+\footnotesize
+\centering
+\begin{tabular}{>{\raggedright\arraybackslash}p{3.8cm}>{\raggedright\arraybackslash}p{7.6cm}}
+\toprule
+\textbf{Câu hỏi} & \textbf{Kết quả}\\
+\midrule
+Tái lập được kết quả?
+& MKG-W: \textbf{0,3691} so với 0,374 (sau hiệu chỉnh cấu hình)\\
+\addlinespace
+Penalty có đóng góp?
+& \textbf{Không}: 4 cách cài đều không tăng MRR\\
+\bottomrule
+\end{tabular}
+
+\end{frame}
+
+% ── 11 ────────────────────────────────────────────────────────────
+\begin{frame}{References}
+\footnotesize
+\begin{enumerate}\setlength\itemsep{6pt}
+  \item[{[1]}] Y. Jian \emph{et al.}, ``APKGC: Noise-enhanced multi-modal
+        knowledge graph completion with attention penalty,'' in \emph{Proc.
+        AAAI Conf. Artif. Intell.}, vol.~39, 2025, pp.~15005-15013.
+  \item[{[2]}] Y. Zhang \emph{et al.}, ``NativE: Multi-modal knowledge graph
+        completion in the wild,'' in \emph{Proc. 47th Int. ACM SIGIR Conf. Res.
+        Develop. Inf. Retrieval}, 2024, pp.~91-101.
+  \item[{[3]}] Y. Liu, H. Li, A. García-Durán, M. Niepert, D. Oñoro-Rubio, and
+        D. S. Rosenblum, ``MMKG: Multi-modal knowledge graphs,'' in \emph{Proc.
+        16th Eur. Semantic Web Conf.}, LNCS vol.~11503, 2019, pp.~459-474. \emph{(Nguồn bộ dữ liệu DB15K.)}
+  \item[{[4]}] D. Xu, T. Xu, S. Wu, J. Zhou, and E. Chen, ``Relation-enhanced
+        negative sampling for multimodal knowledge graph completion,'' in
+        \emph{Proc. 30th ACM Int. Conf. Multimedia}, 2022, pp.~3857-3866. \emph{(MMRNS; nguồn bộ dữ liệu MKG-W.)}
+  \item[{[5]}] HubuKG, ``APKGC,'' GitHub repository, 2025. [Online]. Available:
+        \url{https://github.com/HubuKG/APKGC}
+  \item[{[6]}] Z. Sun, Z.-H. Deng, J.-Y. Nie, and J. Tang, ``RotatE: Knowledge
+        graph embedding by relational rotation in complex space,'' in
+        \emph{Proc. Int. Conf. Learn. Represent. (ICLR)}, 2019.
+\end{enumerate}
+
+\end{frame}
+
+\end{document}

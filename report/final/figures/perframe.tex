@@ -1,0 +1,16 @@
+% Figure: relation labels per frame in Action Genome (Section VIII-A).
+% Message: K = 20 already covers 99.84% of frames, so R@50 and R@100 cannot rise further under the
+% with constraint.
+% source: experiments/results/impartail_repro/ag_objects_per_frame.json ("nhan_moi_khung",
+% training annotations, 198,973 frames).
+\begin{tikzpicture}
+\begin{axis}[paperchart, width=8.6cm, height=3.8cm, ybar, bar width=3.6pt,
+  ymode=log, log origin=infty, ymin=0.6, ymax=3e5, ytick={1,1e2,1e4},
+  yticklabels={1,{\sffamily 10\textsuperscript{2}},{\sffamily 10\textsuperscript{4}}},
+  xmin=1.5, xmax=30.5, xtick={3,5,10,15,20,25,29},
+  xlabel={relation labels per frame}, ylabel={frames (log)}, ymajorgrids]
+\addplot[fill=db!75, draw=none] coordinates {(3,53561) (4,12291) (5,1747) (6,43038) (7,19375) (8,6183) (9,19708) (10,13571) (11,6210) (12,7408) (13,5788) (14,3104) (15,2212) (16,1825) (17,1078) (18,664) (19,591) (20,295) (21,148) (22,75) (23,57) (24,23) (25,14) (26,5) (27,1) (29,1)};
+\draw[black!70, dashed, line width=0.8pt] (axis cs:20.5,0.6) -- (axis cs:20.5,3e5);
+\node[font=\sffamily\scriptsize, anchor=north west, align=left, inner sep=2pt] at (axis cs:20.8,2e5) {99.84\% of frames\\have $\le 20$ labels};
+\end{axis}
+\end{tikzpicture}

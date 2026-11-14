@@ -1,0 +1,27 @@
+% Shared colours and chart styles for the report figures (loaded in the preamble).
+% Palette from the paper-figures skill (PaperBanana style guide): pastel zones at ~13%,
+% cool tones for frozen models, warm tones for what the paper adds, red only for failures.
+\definecolor{gz}{HTML}{9CA3AF}\definecolor{bz}{HTML}{6FA8F5}\definecolor{yz}{HTML}{F2C14E}
+\definecolor{pk}{HTML}{F4A7A7}\definecolor{dr}{HTML}{8B2E2E}\definecolor{db}{HTML}{1F4E8C}
+\definecolor{peach}{HTML}{FBE3D2}\definecolor{gold}{HTML}{B8860B}
+\definecolor{pass}{HTML}{9FD39A}\definecolor{fail}{HTML}{E06666}
+\definecolor{tl}{HTML}{9ED9D2}\definecolor{dt}{HTML}{1D5C57}
+% series: APKGC and the runs we highlight (warm, key result) versus NativE / baselines (cool)
+\colorlet{apk}{dr}
+\colorlet{nat}{db}
+
+% Charts: white background, dotted grid, sans labels, legend in one row below.
+\pgfplotsset{compat=1.17,
+  paperchart/.style={
+    axis lines*=left, axis line style={black!60, line width=0.6pt},
+    tick style={black!60}, major tick length=2pt,
+    grid style={black!30, dotted, line width=0.5pt},
+    every tick label/.append style={font=\sffamily\scriptsize},
+    label style={font=\sffamily\scriptsize},
+    title style={font=\sffamily\scriptsize\bfseries},
+    legend style={font=\sffamily\scriptsize, draw=none, fill=none, legend columns=-1,
+      /tikz/every even column/.append style={column sep=7pt},
+      at={(0.5,-0.32)}, anchor=north},
+    legend cell align=left,
+    /pgf/number format/assume math mode=true,
+    every node near coord/.append style={font=\sffamily\scriptsize}}}

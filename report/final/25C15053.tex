@@ -1,0 +1,905 @@
+% GraphML (HP3) final report — 25C15053
+% Build: xelatex 25C15053.tex (twice)
+\documentclass[conference,a4paper]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\usepackage{amsmath,amssymb}
+\usepackage{pdfpages}
+\usepackage{booktabs,multirow,array}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,backgrounds}
+\usepackage{pgfplots}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{microtype}
+\usepackage{balance}  % equal-height columns on the last page
+
+\setsansfont{texgyreheros}[Extension=.otf,UprightFont=*-regular,BoldFont=*-bold,ItalicFont=*-italic,BoldItalicFont=*-bolditalic]
+\usepackage{fontawesome5}
+\usetikzlibrary{calc,shapes.geometric}
+% Figures live in figures/*.tex (one file per figure, with its data source); shared palette
+% and chart style in figures/style.tex, following the paper-figures skill.
+\input{figures/style}
+\newcommand{\wb}[2]{\href{https://wandb.ai/nhantrnh-graphml/#1}{{\normalfont\ttfamily #2}}}
+\newcommand{\repo}{\url{https://github.com/nhantrnh/GraphML}}
+\newcommand{\verdict}[1]{\textbf{#1}}
+
+\begin{document}
+
+\includepdf[pages=1]{cover.pdf}
+\setcounter{page}{1}
+
+\title{APKGC and ImparTail}
+\author{\IEEEauthorblockN{Trương Thành Nhân}
+\IEEEauthorblockA{Student ID 25C15053, Faculty of Information Technology\\
+University of Science, VNU-HCM}}
+\maketitle
+
+\begin{abstract}
+We reproduce two graph learning papers and test each of their claims with the released
+code. APKGC adds adaptive noise sampling and an attention penalty to multi-modal knowledge
+graph completion. Its headline MRR on MKG-W is approximately reproduced (0.3691 against
+0.374 with the paper's configuration; 0.3605 $\pm$ 0.0009 over three seeds with the
+released run script), but the claimed sources of the gain are not: the released attention
+penalty never fires in 300 measured forward passes and four implementations of it give no
+gain, the learnable noise level is driven to about 0 during training, a retrained NativE
+baseline scores higher than APKGC under one shared protocol, and a test-time corruption
+study shows APKGC to be less robust than NativE in all 30 conditions, collapsing from 0.36
+to 0.06 MRR when entity descriptions are swapped. ImparTail masks labels in the loss to
+reduce long-tail bias in video scene graph generation. Its STTran baseline is reproduced
+within 0.74 mean Recall points on average, but the released code turns masked labels into
+negative labels instead of removing them as Eq.~(5) states, and the paper's mask algorithm,
+taken literally, would mask the rarest classes entirely. Following Eq.~(5) raises
+Recall@50 by 9.4 and 11.4 points under two of three constraints in one unseeded run per
+variant, but the run-to-run noise in that setting is of the same order.
+\end{abstract}
+
+\begin{IEEEkeywords}
+multi-modal knowledge graph, knowledge graph completion, spatio-temporal scene graph, long-tail distribution, reproducibility
+\end{IEEEkeywords}
+
+% ═══════════════════════════════ INTRODUCTION ═══════════════════════════════
+\section{Introduction}
+The two papers in this report come from different areas of graph learning but invite
+the same question: \emph{do the published results come from the components the paper
+proposes?} APKGC~\cite{apkgc} completes multi-modal knowledge graphs, predicting missing
+edges when each entity also has an image and a text description. ImparTail~\cite{impartail}
+generates scene graphs from video, where nodes are objects and edges are their relations
+over time, with a focus on rare relations.
+
+For each paper we list its claims, rerun the released code, and design one experiment per
+claim. Fig.~\ref{fig:verdicts} summarises the outcome; the rest of the report follows the
+same order. Every statement about source code has the form ``the released code does X'':
+we observe the code, not the authors' experimental process. Equation numbers follow the
+paper under discussion.
+
+The code and instructions for rerunning the experiments are at \repo, and the runs are
+logged in two public W\&B projects,
+\href{https://wandb.ai/nhantrnh-graphml/apkgc-repro}{\nolinkurl{apkgc-repro}} and
+\href{https://wandb.ai/nhantrnh-graphml/impartail-repro}{\nolinkurl{impartail-repro}}. Every table and figure that
+reports our runs ends its caption with the IDs of the corresponding runs on Weights \&
+Biases (W\&B); each ID links to \nolinkurl{wandb.ai/nhantrnh-graphml/<project>/runs/<ID>}.
+The runs were built from result files saved after running on Kaggle.
+
+\begin{figure*}[!t]
+\centering
+\resizebox{\textwidth}{!}{\input{figures/verdicts}}
+\caption{The claims of both papers and our verdict on each, with the section that holds the evidence.}
+\label{fig:verdicts}
+\end{figure*}
+
+% ═══════════════════════════════ PART I ═══════════════════════════════
+\section*{PART I: APKGC}
+
+\section{Background and Method}
+\subsection{Task and metrics}
+A knowledge graph stores facts as triples $(h,r,t)$: head entity, relation, tail entity.
+Knowledge graph completion (KGC) answers queries $(h,r,?)$ or $(?,r,t)$ by scoring every
+candidate entity and ranking them. In a multi-modal graph each entity also has an image
+and a description, which can separate candidates that the graph structure alone cannot.
+We report MRR, the mean reciprocal rank of the correct answer, and Hits@$K$, the fraction
+of queries whose answer is ranked in the top $K$:
+\begin{equation*}
+\mathrm{MRR}=\frac{1}{|Q|}\sum_{q\in Q}\frac{1}{\mathrm{rank}_q},\quad
+\mathrm{H@}K=\frac{1}{|Q|}\sum_{q\in Q}\mathbf{1}[\mathrm{rank}_q\le K],
+\end{equation*}
+both in the \emph{filtered} setting, where the other true answers of a query are removed
+from its ranking.
+
+The paper places itself among four directions of earlier work: modality fusion (e.g.\
+IKRL~\cite{ikrl}, OTKGE~\cite{otkge}, NativE~\cite{native}), better negative sampling
+(MMRNS~\cite{mkgw}, MANS~\cite{mans}, AdaMF~\cite{adamf}), combining per-modality decisions
+(IMF~\cite{imf}), and noise (SnAg~\cite{snag}). It names two limitations of that work. First, real
+multi-modal data is noisy, yet earlier methods try to remove noise rather than become
+robust to it. Second, the language models that encode text show \emph{attention
+over-trust}, a term from OPERA~\cite{opera}: they put attention on tokens with little
+meaning, such as punctuation.
+
+\begin{figure*}[t]
+\centering
+\resizebox{\textwidth}{!}{\input{figures/arch}}
+\caption{The APKGC architecture as described in the paper~\cite{apkgc}, redrawn. Red-bordered blocks are the paper's two contributions; equation numbers refer to the paper. In the released code the encoders instead run once beforehand and are frozen, and noise is added to their output (Fig.~\ref{fig:flow}).}
+\label{fig:arch}
+\end{figure*}
+
+\subsection{Method as described in the paper}
+APKGC has three modules (Fig.~\ref{fig:arch}). (a) The raw text vector
+$V_t=h_t+r_t+d_h$ (head and relation text plus the head's description, Eq.~(1)) and the
+image patches $V_v$ (Eq.~(2)) receive noise (Eq.~(6)) and are then tokenised (Eq.~(7)).
+(b) Attention between tokens is computed, over-attended tokens are penalised, and the
+result is encoded by BERT~\cite{bert} and BEiT~\cite{beit} into entity features (Eq.~(12)).
+(c) Text and image features interact, are normalised, and the triple is scored with
+RotatE~\cite{rotate}, which treats a relation as a rotation in complex space.
+
+\emph{Adaptive noise sampling.} Gaussian noise is centred on the data mean $\mu_m$ with
+standard deviation $\varphi_m$; uniform noise spans $[\beta_{\min},\beta_{\max}]$:
+\begin{align}
+N_g &= \theta_r\,(\varphi_m\odot g+\mu_m),\quad g\sim\mathcal{N}(0,I), \tag{3}\\
+N_a &= \theta_r\,[\beta_{\min}+(\beta_{\max}-\beta_{\min})\odot U]. \tag{4}
+\end{align}
+A per-entity draw $\rho\sim U[0,1]$ decides which vectors receive noise:
+\begin{equation}
+V_n=\begin{cases}(1-\theta_r)\,V_o+N_m & \text{if } \rho>\theta_n,\\ V_o & \text{otherwise.}\end{cases} \tag{5}
+\end{equation}
+The paper describes $\theta_r$ as learnable and $\theta_n$ as adjusted during training,
+and uses Gaussian noise on DB15K but uniform noise on MKG-W without comparing the two. In
+our reading the noise is a regulariser: training on deliberately corrupted inputs should
+keep the model from depending too much on any one modality.
+
+\emph{Attention penalty.} When a token's attention score $A^p_i$ exceeds a threshold
+$\phi$, it is reduced by the rate $\theta_p$ and the excess is spread over the neighbours
+$n$ in a window $(p-k,\,p+k)$ with weights $\theta^n_j$ ($i$ and $j$ mark values before and
+after the adjustment):
+\begin{align}
+A^p_j &= A^p_i-\theta_p A^p_i \quad \text{if } A^p_i>\phi, \tag{9}\\
+A^n_j &= A^n_i+\theta^n_j\,(A^p_i-\phi),\quad n\in(p-k,\,p+k). \tag{10}
+\end{align}
+$\phi$, $\theta_p$ and $k$ are fixed hyperparameters: $k$ and $\theta_p$ are chosen from a
+grid on the test results (RQ4, Fig.~\ref{fig:heat}), and the values of $\phi$ and of the
+weights $\theta^n_j$ are not reported.
+
+\emph{Loss.} With $S(h,r,t)=\lVert h\circ r-t\rVert$ (small means plausible), margin
+$\lambda$ and self-adversarial weights $v_i$ over $E$ negative (corrupted) triples, the loss
+is RotatE's:
+\begin{equation}
+\mathcal{L}=\frac{1}{|T|}\sum_{T}\Big(-\log\sigma(\lambda-S)-\sum_{i=1}^{E}v_i\log\sigma(S'_i-\lambda)\Big). \tag{20}
+\end{equation}
+Eq.~(20) as printed in the paper places the logarithm around a difference and adds a
+stray exponent $\phi$; we give the RotatE form it cites.
+Neither new component is part of the loss; both act on the input and the encoder. The
+paper does not say whether BERT and BEiT are frozen, which parameters the loss updates, or
+whether the penalty also runs at inference.
+
+\subsection{Method as implemented in the released code}
+\label{sec:flow}
+Fig.~\ref{fig:flow} answers these three questions from the released code~\cite{apkgcrepo},
+and Table~\ref{tab:diff} lists where the code departs from the paper. Three facts matter
+for the results that follow. First, the loss does not reach BERT or BEiT: text and image
+features are precomputed and frozen; what is learned is
+the projections, a one-layer two-head Transformer, the entity and relation vectors, and
+$\theta_r$. Second, $\theta_r$ receives gradient only through the noise on entity vectors,
+because text and image noise is generated outside the computation graph, while $\theta_n$
+appears only in the non-differentiable test $\rho<\theta_n$ and receives none. Noise is
+regenerated at every step although the configuration names this option ``per epoch''. Third,
+noise is added only in training, but the penalty sits inside the attention function and
+also runs at inference; it has no learnable parameters ($k=1$, $\theta_p=0.001$), so
+gradients only pass through it. Most importantly, the penalised block receives
+\emph{three} tokens per entity, the structure, image and text vectors, so a ``token'' in
+the code is a whole modality rather than a word.
+
+\begin{figure}[!t]
+\centering
+\resizebox{\columnwidth}{!}{\input{figures/flow}}
+\caption{Data flow in the released APKGC code: what the loss updates and which steps run only in training. The gradient stops before the precomputed BERT and BEiT features.}
+\label{fig:flow}
+\end{figure}
+
+\begin{table}[!t]
+\centering
+\caption{Paper description versus released code (APKGC).}
+\label{tab:diff}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{3.0cm}}
+\toprule
+Item & Paper & Released code\\
+\midrule
+Batch, negatives & 2048, 64 & 1024, 32 (run script)\\
+MKG-W noise & uniform & Gaussian only\\
+$\theta_n$ & adapted during training & fixed at 0.2\\
+Penalised tokens & text and image tokens & 3 modality vectors\\
+BERT, BEiT & encode inside the model & precomputed, frozen features\\
+Penalty condition & $A^p_i>\phi$ & suffix product $>10$\\
+$k$, $\theta_p$ & from RQ4 grid (best on DB15K: 2, 0.01) & 1, 0.001 for both datasets\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Experimental Setup}
+\label{sec:setup}
+\emph{Data and published numbers.} The paper evaluates on DB15K~\cite{mmkg} (12,842
+entities, 279 relations) and MKG-W~\cite{mkgw} (15,000 entities, 169 relations).
+Table~\ref{tab:paper} gives the published results we test. The paper reports no standard
+deviation and no number of runs.
+
+\begin{table}[!t]
+\centering
+\caption{Results published in the APKGC paper~\cite{apkgc} (MRR). Lower rows: the paper's component ablation (Table 4 of the paper, which names no dataset; its full-model row equals the MKG-W result).}
+\label{tab:paper}
+\small
+\begin{tabular}{lcc}
+\toprule
+Method & DB15K & MKG-W\\
+\midrule
+RotatE~\cite{rotate} & 0.293 & 0.337\\
+PairRE~\cite{pairre} & 0.311 & 0.344\\
+SnAg~\cite{snag} & 0.342 & 0.359\\
+NativE~\cite{native} & 0.362 & 0.366\\
+\textbf{APKGC} & \textbf{0.364} & \textbf{0.374}\\
+\midrule
+\quad w/o noise sampling & - & 0.358\\
+\quad w/o attention penalty & - & 0.360\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Runs.} All runs use the released code on Kaggle (Tesla T4, 16 GB, sessions of at
+most 12 hours) with the authors' precomputed features. The patches needed to run it (a
+seed flag, periodic checkpointing) do not change the model and are in our repository.
+Table~\ref{tab:cfg} compares the configurations: the paper states batch 2048 and 64
+negatives, but the run script in the repository uses 1024 and 32, so we run both.
+
+\begin{table}[!t]
+\centering
+\caption{APKGC configurations on MKG-W (learning rate $10^{-4}$ in all).}
+\label{tab:cfg}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccc}
+\toprule
+ & Paper & Run script & Ours\\
+\midrule
+Embedding dim & 128 & 128 & 128\\
+Batch size & 2048 & 1024 & both\\
+Negatives & 64 & 32 & both\\
+Margin & - & 12 & 12\\
+Max.\ epochs & - & 8000 & 2000\\
+Noise (MKG-W) & uniform & Gaussian & Gaussian\\
+Test evaluation & - & every 100 ep. & every 250 ep.\\
+GPU & RTX 4090 & - & Tesla T4\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Protocol.} The released code evaluates on the test set during training and keeps
+the checkpoint with the highest test MRR; we report this ``best on test'' number unless
+stated otherwise, and also the final checkpoint where the choice matters. Standard
+deviation (std) is the sample standard deviation over seeds. Before running anything we
+fixed one rule: a difference smaller than 3 std is treated as indistinguishable from
+random variation.
+
+\section{Results by Claim}
+\subsection{Main result and ranking against NativE}
+\label{sec:c1}
+Table~\ref{tab:repro} gives the reproduction on MKG-W. With the run-script configuration,
+three seeds give MRR 0.3605 $\pm$ 0.0009, 0.0135 below the published 0.374, about 15 std,
+so the gap is real. Most of it is configuration: with the paper's configuration MRR is
+0.3691, which closes 0.0086, about two thirds of the gap. The remaining 0.0049 is
+unexplained; candidates are the embedding version, the number of epochs and checkpoint
+selection. On DB15K a single run with the run-script configuration, capped in advance at 600 epochs
+to fit one Kaggle session (it took 4.9 hours), ended on a nearly flat curve (the last 50
+epochs added 0.0001 MRR) at 0.3469, against the published 0.364 (Fig.~\ref{fig:curves},
+right).
+
+\begin{table}[!t]
+\centering
+\caption{Reproducing APKGC on MKG-W (best checkpoint on test). W\&B: seeds \wb{apkgc-repro/runs/1uqw3vr3}{1uqw3vr3}, \wb{apkgc-repro/runs/ab5t6ewn}{ab5t6ewn}, \wb{apkgc-repro/runs/n3gnlcgb}{n3gnlcgb}; paper configuration \wb{apkgc-repro/runs/8imed444}{8imed444}.}
+\label{tab:repro}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+ & MRR & H@1 & H@3 & H@10\\
+\midrule
+Published~\cite{apkgc} & 0.374 & 0.306 & 0.404 & 0.501\\
+Run script, 3 seeds & 0.3605 & 0.2952 & 0.3896 & 0.4792\\
+\quad std & 0.0009 & 0.0032 & 0.0028 & 0.0030\\
+Paper configuration & 0.3691 & 0.3028 & 0.3997 & 0.4874\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!t]
+\centering
+\resizebox{\columnwidth}{!}{\input{figures/curves}}
+\caption{Test MRR during training (released code, our runs). The released code reports the highest point of each curve. W\&B: DB15K \wb{apkgc-repro/runs/y41uo30v}{y41uo30v}; MKG-W as in Table~\ref{tab:repro}.}
+\label{fig:curves}
+\end{figure}
+
+The learning curves expose the effect of selecting on the test set. With the paper's
+configuration MRR peaks at epoch 750 (0.3691) and declines to 0.3571 at epoch 2000; with
+the run script the three seeds stay within 0.355-0.361 after epoch 500. Taking the last
+epoch instead would lower the reported MRR by about 0.012 and 0.003 respectively.
+
+This matters for the ranking claim, because NativE's released code reports its
+\emph{final} checkpoint. We retrained NativE with its authors' MKG-W script (dimension 250,
+batch 1024, 128 negatives, 1000 epochs) on the same feature files that APKGC uses, with
+seeds 42 and 1234, and compare both models under both rules in Table~\ref{tab:native}.
+With the final checkpoint, both NativE runs beat every APKGC run, by 0.0095 to 0.018 MRR;
+with the best checkpoint on test the gap narrows but keeps its sign (0.3691 against 0.3730
+and 0.3733). In our runs the paper's ranking is reversed. NativE has two seeds and each
+model uses its own authors' configuration; selecting on the validation split would be the
+proper protocol for both.
+
+\begin{table}[!t]
+\centering
+\caption{APKGC and NativE on MKG-W under two checkpoint-selection rules (MRR, our runs, same feature files). W\&B: NativE \wb{apkgc-repro/runs/6vkgophb}{6vkgophb}, \wb{apkgc-repro/runs/e1ho9crp}{e1ho9crp}.}
+\label{tab:native}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcc}
+\toprule
+ & final ckpt & best on test\\
+\midrule
+APKGC, run script, 3 seeds & 0.3572 $\pm$ 0.0017 & 0.3605 $\pm$ 0.0009\\
+APKGC, paper config. & 0.3571 & 0.3691\\
+NativE, seed 42 & 0.3684 & 0.3730\\
+NativE, seed 1234 & 0.3733 & 0.3733\\
+\midrule
+Published~\cite{apkgc} & \multicolumn{2}{c}{APKGC 0.374, NativE 0.366}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The attention penalty}
+\label{sec:c2}
+The paper's ablation attributes 0.014 MRR to the penalty, and its own hyperparameter study
+(Fig.~\ref{fig:heat}) already shows a weaker picture: on DB15K, 5 of the 16 penalised
+configurations score below the $k=0$ row (0.340), which is constant in $\theta_p$ and
+which we read as no penalty, and on MKG-W 8 of 16 score below it (one ties; Appendix~C). To test the claim we kept everything fixed
+(MKG-W, seed 42, noise on, the released configuration and early stopping) and implemented
+the penalty in four ways: \textbf{A}, the released code; \textbf{B}, exactly
+Eqs.~(9)-(10); \textbf{C}, an adaptive criterion we propose, which penalises the most
+probable token in the 10\% of rows with the lowest normalised attention entropy in each
+batch, so no threshold needs tuning; and \textbf{B2}, clipping attention probabilities at
+0.5 and spreading the excess to neighbours as in the paper's case study, the strongest
+penalty.
+
+\begin{figure}[!t]
+\centering
+\input{figures/heat}
+\caption{MRR on DB15K by window $k$ and penalty rate $\theta_p$, from the paper's hyperparameter study (RQ4)~\cite{apkgc}, redrawn. Dashed frame: $k=0$, constant in $\theta_p$, which we read as no penalty; red outline: penalised configurations that score below it. The paper's MKG-W panel (H@10) has 8 such cells out of 16.}
+\label{fig:heat}
+\end{figure}
+
+\begin{table}[!t]
+\centering
+\caption{Four implementations of the attention penalty (MKG-W, seed 42). W\&B: A \wb{apkgc-repro/runs/5mubzabz}{5mubzabz}, B \wb{apkgc-repro/runs/n1z4asjp}{n1z4asjp}, C \wb{apkgc-repro/runs/5f540xf2}{5f540xf2}, B2 \wb{apkgc-repro/runs/6o5rs8sj}{6o5rs8sj}; firing counter \wb{apkgc-repro/runs/474c5kcn}{474c5kcn}.}
+\label{tab:penalty}
+\small
+\begin{tabular}{llcc}
+\toprule
+ & Implementation & MRR & H@1\\
+\midrule
+A & released code & 0.3629 & 0.2933\\
+B & Eqs.\ (9)-(10) & 0.3629 & 0.2933\\
+C & entropy criterion (ours) & 0.3630 & 0.2934\\
+B2 & clip at 0.5 & 0.3605 & 0.2964\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!t]
+\centering
+\resizebox{\columnwidth}{!}{\input{figures/penalty}}
+\caption{Why the released penalty never fires. The paper compares each word token's score with $\phi$; the released code compares the product of the scores from a position to the end of a three-token row with 10. Grid: the 300 measured forward passes, none of which triggered the penalty. W\&B: \wb{apkgc-repro/runs/474c5kcn}{474c5kcn}.}
+\label{fig:penalty}
+\end{figure}
+
+None of the four raises MRR (Table~\ref{tab:penalty}): A, B and C are at most 0.0001 apart,
+nine times smaller than the std, and B2 is 0.0024 below A (2.7 std). To see why A and B
+agree to four digits we attached a counter to the released code over 300 forward passes
+(Fig.~\ref{fig:penalty}).
+The released code compares the threshold 10 with the \emph{product} of the attention
+scores from a position to the end of the row, not with the token's own score. The largest
+absolute score in a pass is 7.50 on average (10.80 at most), and 62.7\% of the suffix
+products are negative, so the condition is \textbf{never satisfied in any of the 300
+passes}; the code then skips
+the penalty block entirely. Variant A is in effect a model without the penalty, and B, with
+$\theta_p=0.001$, removes only 0.1\% of the top token's score, which softmax barely
+notices. A simulation that assumed independent scores had predicted a firing rate of
+18-26\%; the measured 0\% shows that assumption is wrong on real data.
+
+\emph{Are the penalised tokens the uninformative ones?} The paper supports this with two
+case-study examples, not with a measurement over the dataset. In the released code the
+question changes meaning, because the three tokens are whole modalities: a penalty, when it
+fires, down-weights the structure, the image or the text of an entity, never a full stop.
+Variant A penalises nothing and B almost nothing; C and B2 do penalise, but we did not log
+which position, so whether they hit the right modality remains open. Logging the penalised
+modality per query against the change in that query's rank would settle it cheaply.
+
+\subsection{Adaptive noise sampling}
+\label{sec:c3}
+The paper describes $\theta_r$ as learned but does not report its value after training. We
+read it from the best checkpoint of variant A, after checking the reading against known
+constants in the same file ($\pi=3.14159$, margin $=12$). Table~\ref{tab:noise} shows that
+$\theta_r$ falls from 0.7 to $-0.0004$, so the mix $(1-\theta_r)V_o+\theta_r N$ leaves the
+original vector almost unchanged: the model switches the noise off by itself. This is what
+one should expect when a noise level is optimised by the training loss, since corrupting
+the input can only make that loss larger. $\theta_n$ stays at 0.2 because it receives no
+gradient (Section~\ref{sec:flow}).
+
+Consistently, a run with noise sampling switched off (no text, image or entity noise), otherwise
+identical to A, gives MRR 0.3655, 0.0026 \emph{above} A. The difference is 2.96 std, just
+below our 3-std rule, and comes from one seed with the Gaussian noise of the released code
+rather than the uniform noise the paper states for MKG-W, so it does not settle the claim.
+What it does show is that removing the noise does not lower MRR by 0.016 as the paper
+reports.
+
+\begin{table}[!t]
+\centering
+\caption{The noise component in the released code (MKG-W, seed 42). W\&B: parameters \wb{apkgc-repro/runs/xhepf56j}{xhepf56j}; without noise \wb{apkgc-repro/runs/2n68eify}{2n68eify}; with noise is variant A in Table~\ref{tab:penalty}.}
+\label{tab:noise}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcc}
+\toprule
+ & initial & after training\\
+\midrule
+Mixing level $\theta_r$ & 0.7 & $-0.0004$\\
+Sampling threshold $\theta_n$ & 0.2 & 0.2\\
+\midrule
+ & with noise & without noise\\
+\midrule
+MRR & 0.3629 & 0.3655\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Robustness to corrupted modalities}
+\label{sec:c4}
+Robustness to noisy multi-modal data is the paper's first motivation, but the paper only
+evaluates clean test data. We measured it directly. Without retraining, we corrupt the
+frozen text and image features of all entities at test time in three kinds of ways (five
+corruption types in all):
+\emph{missing}, replacing a feature with the mean feature, which is how the released code
+fills entities that lack a modality; \emph{swapped}, giving each entity another entity's
+feature; and \emph{Gaussian} noise of $\sigma\in\{0.5,1,2\}$ times the per-dimension
+standard deviation. Ranking follows the released filtered protocol exactly; as a check,
+the uncorrupted condition reproduces each checkpoint's MRR to four digits. We evaluate
+APKGC variant A (seeds 42 and 2024) and NativE (seeds 42 and 1234) with three random draws
+per corruption; Fig.~\ref{fig:robust} shows the main conditions.
+
+\begin{figure}[!t]
+\centering
+\resizebox{\columnwidth}{!}{\input{figures/robust}}
+\caption{Test MRR on MKG-W when the text or image features of all entities are corrupted at test time; mean of two training seeds per model. W\&B: APKGC \wb{apkgc-repro/runs/pb3ucjeh}{pb3ucjeh}, \wb{apkgc-repro/runs/df5zub7c}{df5zub7c} (training of seed 2024: \wb{apkgc-repro/runs/lg894aew}{lg894aew}); NativE \wb{apkgc-repro/runs/o99pv1hz}{o99pv1hz}, \wb{apkgc-repro/runs/bv9nj30t}{bv9nj30t}.}
+\label{fig:robust}
+\end{figure}
+
+Three findings stand out. \emph{Both models barely use images}: removing every image
+changes APKGC's MRR by at most 0.0002 and NativE's by 0.0012 on average (0.0051 at most),
+and swapping images costs at most 0.008, so on MKG-W the multi-modal model is in practice a
+structure-plus-text model. \emph{Wrong text is far worse than no text}: with swapped text
+APKGC falls to 0.0598, against 0.2114 when the text is simply absent. The model cannot tell
+that a description belongs to another entity and follows it; this is over-trust at the
+level of a whole modality, which the token-level penalty does not address. \emph{APKGC is
+not more robust than NativE}: its MRR is lower in all 30 conditions we tested (five
+corruption types, two corruption rates, three modality settings; Appendix~B), and its drop from the
+clean value is larger in 17 of the 20 conditions that corrupt text; the three exceptions
+are mild noise ($\sigma=0.5$), where the drops differ by at most 0.0015. NativE is not
+APKGC without noise, so this does not isolate the noise component, but the paper's claim
+predicts the opposite ordering, and the result agrees with $\theta_r$ being learned down
+to 0.
+
+\section{Discussion of APKGC}
+The headline number of APKGC is approximately reproducible, but none of the paper's
+explanations for it survives our tests. The evidence is strongest for the attention
+penalty, which does not fire in the released code and gives no gain under four
+implementations. For the noise, three independent observations point the same way: the
+learned noise level goes to 0, removing noise does not hurt, and the model is less robust
+than a baseline without this mechanism. The ranking over NativE does not hold once both
+models are evaluated under one checkpoint-selection rule.
+
+Reading the paper as a reviewer, we find further weaknesses that the reproduction alone
+would not reveal.
+
+\emph{Experimental protocol.} The headline numbers are the best cells of the paper's own
+hyperparameter grid: 0.364 MRR on DB15K is the cell $k=2$, $\theta_p=0.01$, and 0.501 H@10
+on MKG-W is the cell $k=1$, $\theta_p=0.01$. No validation split is described, so the
+hyperparameters appear to be chosen on the test set, on top of the released code's
+test-set checkpoint selection (Section~\ref{sec:c1}). There are no standard deviations,
+numbers of runs, significance tests or training times; on DB15K the margin over NativE is
+0.002 MRR and APKGC is lower on H@10 (0.527 against 0.529), which cannot be called an
+improvement without variance estimates.
+
+\emph{The penalty mechanism.} Eq.~(9) removes $\theta_p A^p_i$ from a token while Eq.~(10)
+gives its neighbours $\theta^n_j(A^p_i-\phi)$, so attention mass is not conserved and
+nothing renormalises it; the open window $(p-k,\,p+k)$ contains no neighbour when $k=1$;
+and Eq.~(12) feeds the penalised attention scores to the encoder as if they were its input.
+The equations do not say whether they act before or after softmax, although the case study
+clips 0.66 and 0.59 to 0.5, which reads like probabilities. The motivation also transfers
+poorly: OPERA~\cite{opera} describes over-trust during autoregressive decoding of
+multi-modal language models, whereas APKGC applies it inside separate BERT and BEiT
+encoders, where heavy attention on punctuation and separator tokens is known to act largely
+as a no-op~\cite{clark}; in the paper's own case study the penalised tokens are ``for'' and
+``and''. The hand-set $k=1$, $\theta_p=0.001$ in the released code is not the best grid cell
+reported for either dataset.
+
+\emph{The noise module.} The paper presents noise as a departure from methods that reject
+it, yet its related work and RQ1 name SnAg and AdaMF as methods that already use noisy data;
+the noise module is compared neither with them nor with plain regularisers such as dropout
+or modality dropout. Eq.~(4) draws $U$ from $[\beta_{\min},\beta_{\max}]$ and then scales
+it by $(\beta_{\max}-\beta_{\min})$ again, $\theta_n$ is ``adaptively tuned'' with no rule
+given, and the choice of Gaussian noise for DB15K but uniform noise for MKG-W is neither
+explained nor compared.
+
+\emph{Ablations and claims.} The component ablation names no dataset; the modality ablation
+covers DB15K only, and its structure-only variant (0.211 MRR) falls far below plain RotatE
+(0.293), so its variants are not comparable baselines; and removing the attention
+``decrease'' step costs only 0.005 MRR. RQ5 asks how APKGC performs on real-world data but
+is answered with two hand-picked examples. Smaller inconsistencies: the experiments section
+announces four research questions but lists five; the RQ1 text swaps the datasets of the
+Hits@1 gains (the abstract has them right); H@3 on DB15K is 0.413 in the main table but
+0.411 in the per-modality ablation; and the text omits $\phi$, $\theta^n_j$, the $\beta$
+range, the initial $\theta_r$ and $\theta_n$, epochs, margin, optimiser and encoder
+variants, so the method cannot be reproduced from the paper alone.
+
+Our study has limits of its own: two seeds for NativE and for the robustness study, one
+seed for the variant and ablation runs, Gaussian noise only, and checkpoints selected on
+test, as in the released code. Settling the noise claim would take the no-noise variant on
+seeds 1234, 2024 and 3407 under the protocol of Table~\ref{tab:repro}, the uniform noise of
+Eq.~(4), and selection on the validation split for all models.
+
+% ═══════════════════════════════ PART II ═══════════════════════════════
+\section*{PART II: IMPARTAIL}
+
+\section{Background and Method}
+\subsection{Task and long-tail bias}
+A scene graph has the triple structure of a knowledge graph, but subject and object are
+objects in a video frame and the relation is their interaction, e.g.\ (person, holding,
+cup). A spatio-temporal scene graph (STSG) assigns a graph to each frame and links the
+graphs through object identities over time. ImparTail~\cite{impartail} addresses graph
+generation for observed frames (VidSGG), which we reproduce, and anticipation for future
+frames (SGA), as well as two robustness variants with 16 types of video corruption.
+Evaluation has three modes, depending on what is given: PredCls (boxes and object labels;
+only relations are predicted), SGCls (boxes) and SGDet (nothing); and three constraints:
+\emph{with} (one relation per object pair in each group), \emph{no} (several allowed) and
+\emph{semi} (several per pair, but only those scoring above a threshold, 0.9 in the
+released code).
+
+The benchmark, Action Genome~\cite{ag}, annotates person-object relations in Charades
+videos~\cite{charades} with 26 predicates in three groups: attention (3), spatial (6) and
+contacting (17). Counting the training annotations, there are 417,302 labelled
+(person, object) pairs and the distribution is highly skewed: among the contacting
+predicates, \emph{holding} appears 169,741 times and \emph{twisting} only 93 times, a ratio
+of 1,825:1 (Fig.~\ref{fig:tail}).
+A model trained for overall accuracy drifts towards common classes. Recall@$K$ (R@$K$),
+computed over all predictions, hides this; mean Recall@$K$ (mR@$K$), the average of
+per-class recall, exposes it.
+
+\begin{figure}[!t]
+\centering
+\resizebox{\columnwidth}{!}{\input{figures/tail}}
+\caption{Occurrences of the 17 contacting predicates in the Action Genome training set (log scale), counted by us from the annotation file.}
+\label{fig:tail}
+\end{figure}
+
+\subsection{Method}
+ImparTail changes the objective, not the architecture (Fig.~\ref{fig:impartail}). Each
+relation label $p^t_{ijk}$ (frame $t$, object pair $i,j$, predicate $k$) gets a binary mask
+$m^t_{ijk}$, and the paper states that $m=1$ \emph{removes} the label from the loss:
+\begin{equation}
+\tilde{\mathcal{L}}_{p^t_{ijk}}=(1-m^t_{ijk})\,\mathcal{L}_{p^t_{ijk}}=\begin{cases}\mathcal{L}_{p^t_{ijk}} & m^t_{ijk}=0,\\ 0 & m^t_{ijk}=1.\end{cases} \tag{5}
+\end{equation}
+Algorithm~1 gives every predicate the same selection probability,
+$\mathrm{Prob}[rel]=1/|P|$, and draws a per-predicate target count $\mathrm{Tar}[rel]$ from
+a multinomial over $N_{\mathrm{target}}=N\times R_m$. The intent is that, because the count
+is uniform over \emph{classes} rather than \emph{instances}, common classes lose more
+labels and the learning signal shifts towards rare classes, without adding parameters. As
+written, however, the appendix (Algorithm~2) \emph{masks} $\mathrm{Tar}[rel]$ instances of
+each class: with $R_m=0.9$ that is about $0.9N/|P|$ per class, which would mask every
+instance of any class rarer than that. The released code does the opposite, \emph{keeping}
+$\mathrm{Tar}[rel]$ instances, drawn separately within each relation group; only this
+reading matches the stated aim, and it is the one we analyse below. The paper also proposes raising the mask ratio with
+the epoch ($R_m=e\times R_s$), but its Remark states that a fixed ratio of 0.9 performs
+comparably and the reported numbers use it; the released code has no $R_m=e\times R_s$
+schedule, only separate curriculum variants with a hard-coded one.
+
+\begin{figure}[!t]
+\centering
+\resizebox{\columnwidth}{!}{\input{figures/impartail}}
+\caption{ImparTail keeps the baseline architecture and changes only which labels enter the loss (red-bordered blocks). Drawn by us from the paper's description.}
+\label{fig:impartail}
+\end{figure}
+
+\section{Experimental Setup}
+For VidSGG the paper attaches ImparTail to STTran~\cite{sttran} and
+DSG-DETR~\cite{dsgdetr}, trains both the baseline and ImparTail for five epochs with BCE
+(the multi-label margin loss did not reproduce the literature's STTran numbers), and
+reports mean Recall in its main table; for STTran in PredCls with the \emph{with}
+constraint, mR@20 rises from 34.7 to 52.7, a relative gain of 51.9\% (18 points). Recall on
+clean data appears only in the appendix, where the \emph{with}-constraint rows drop, e.g.\
+R@50 of STTran in SGCls from 46.5 to 41.1.
+
+We ran the authors' code on Kaggle (Tesla P100) in PredCls mode on all 1,750 Action Genome
+test videos. Making it run required six environment fixes (a GPU-compatible build, outdated PyTorch and NumPy calls, and mounting the 58 GB of frame data), none of which changes the model. We use the
+released STTran checkpoint for evaluation. For the mask experiment we train two variants
+with the BCE loss, as the paper does, that differ only in the mask implementation: one run
+each, two epochs, and no fixed seed, so the two runs also differ in their random mask draw
+and initialisation.
+
+\section{Results by Claim}
+\subsection{Baseline reproduction}
+\label{sec:i1}
+Table~\ref{tab:it} compares nine mean Recall values of the released STTran checkpoint with
+the paper: the mean deviation is 0.74 points and the largest 1.52 points. This validates
+the evaluation pipeline, the data and the baseline checkpoint for mean Recall. Plain Recall
+reproduces less well: under the \emph{with} constraint R@20 is 64.94 against the paper's
+69.9.
+
+\begin{table}[!t]
+\centering
+\caption{Mean Recall of STTran, PredCls: paper~\cite{impartail} $\to$ our evaluation of the released checkpoint. W\&B: \wb{impartail-repro/runs/emvvqpr2}{emvvqpr2}.}
+\label{tab:it}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+Constraint & mR@10 & mR@20 & mR@50\\
+\midrule
+with & 30.5 $\to$ 30.70 & 34.7 $\to$ 35.54 & 34.8 $\to$ 35.65\\
+no & 45.7 $\to$ 44.33 & 63.4 $\to$ 63.80 & 80.5 $\to$ 80.73\\
+semi & 36.6 $\to$ 36.24 & 51.8 $\to$ 52.67 & 53.8 $\to$ 55.32\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The same evaluation reveals a property of the metric. Under the \emph{with} constraint,
+R@20 is 64.94 and R@50 is 64.96. The evaluation code keeps one predicate per pair and
+relation group, so a frame with at most 8 objects yields at most 24 candidates: R@50 equals
+R@100 by construction, and R@20 can differ only on the few crowded frames (99.84\% of
+training frames have at most 20 true labels, Fig.~\ref{fig:perframe}). Under \emph{semi} the
+equality held empirically in our PredCls run. Large $K$ therefore adds little information
+for comparing methods under these constraints.
+
+\begin{figure}[!t]
+\centering
+\resizebox{\columnwidth}{!}{\input{figures/perframe}}
+\caption{Relation labels per frame in the Action Genome training annotations (198,973 frames, log scale), counted by us.}
+\label{fig:perframe}
+\end{figure}
+
+\subsection{The mask implementation}
+\label{sec:i2}
+With the binary cross-entropy (BCE) loss, the released code builds an all-zero target
+vector, sets 1 only for labels that are \emph{not masked}, and averages BCE over the whole
+vector; a pair whose labels in a group are all masked is skipped. A masked positive label
+is therefore not removed from the loss as Eq.~(5) states whenever its pair keeps another
+label of the same group: it becomes a \emph{negative label}. With a sigmoid, the gradient with respect to the logit
+$z$ is $\partial\mathcal{L}/\partial z=q-y$, where $q$ is the predicted probability.
+Fig.~\ref{fig:maskgrad} shows the three cases for a relation that is truly present: an
+unmasked label pushes $q$ up, a label masked as in Eq.~(5) does nothing, and a label masked
+as in the released code pushes $q$ \emph{down}.
+
+\begin{figure}[!t]
+\centering
+\resizebox{\columnwidth}{!}{\input{figures/maskgrad}}
+\caption{Effect of each mask treatment on the probability $q$ of a relation that is truly present (BCE gradient $q-y$; bar height illustrative).}
+\label{fig:maskgrad}
+\end{figure}
+
+In the worst case, when the pair always keeps another label, a class kept with
+probability $p_c$ receives the expected gradient $q-p_c$ instead of $q-1$, which reverses
+once the model's confidence in a true relation exceeds $p_c$. Under the released code's
+per-group sampling on Action Genome, \emph{holding} has $p_c=0.016$, while the four rarest
+contacting classes have $p_c=1$ and are unaffected. The actual gradient lies between these
+bounds because pairs with a single label in the group are skipped instead; the bias is
+directional and largest on the common classes the method targets.
+
+We patched the BCE loss to follow Eq.~(5), computing element-wise BCE, multiplying by
+the mask and normalising by the number of active elements (which also rescales the loss),
+and trained both variants. Table~\ref{tab:patch} shows that R@50 rises by 9.4 points under
+\emph{with} and 11.4 points under \emph{semi}; the harmonic mean hR of R@50 and mR@50 rises
+by 4.11 points on average over the three constraints. These differences must be read with
+three caveats. First, the run-to-run noise is large: the attention predicates, whose loss is
+identical in both variants, still move by up to 37 points (\emph{looking\_at} $+37.3$,
+\emph{unsure} $-27.6$, Fig.~\ref{fig:perclass}), as much as \emph{holding} ($+42.2$) or
+\emph{eating} ($-42.0$), so no per-class change can be attributed to the mask. Second, both
+trained variants reach only 21.7 and 33.1 R@50 under \emph{semi}, against 83.27 for the
+released checkpoint (Appendix~D): after two epochs most scores stay below the 0.9 threshold, so the
+\emph{semi} gain reflects scores crossing that threshold more than better ranking. Third,
+there is one unseeded run per variant, two epochs instead of the paper's five. The
+experiment shows that the patch is feasible and points in a plausible direction; it does
+not establish an improvement.
+
+\begin{table}[!t]
+\centering
+\caption{Released mask $\to$ mask following Eq.~(5); STTran PredCls, one unseeded run per variant, two epochs. W\&B: released \wb{impartail-repro/runs/7ok1vx4f}{7ok1vx4f}, Eq.~(5) \wb{impartail-repro/runs/4h2scw2u}{4h2scw2u}.}
+\label{tab:patch}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccc}
+\toprule
+Constraint & R@50 & mR@50 & $\Delta$hR@50\\
+\midrule
+with & 54.9 $\to$ 64.3 & 52.4 $\to$ 50.9 & $+3.2$\\
+no & 99.6 $\to$ 99.6 & 97.6 $\to$ 96.5 & $-0.5$\\
+semi & 21.7 $\to$ 33.1 & 13.8 $\to$ 22.2 & $+9.7$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!t]
+\centering
+\resizebox{\columnwidth}{!}{\input{figures/perclass}}
+\caption{Per-predicate change in R@50 under the \emph{with} constraint from the released mask to Eq.~(5); predicates ordered by training frequency, filled dots are gains and open dots losses; grey diamonds are attention predicates, whose loss the patch does not change, so their spread shows the run-to-run noise (runs of Table~\ref{tab:patch}).}
+\label{fig:perclass}
+\end{figure}
+
+\section{Discussion of ImparTail}
+ImparTail is simple and general: it adds no parameters, attaches to several baselines and
+raises mean Recall strongly in the paper's experiments. Our reproduction confirms the ground
+those results stand on for mean Recall, the evaluation pipeline and the baseline
+checkpoint, and finds that the released BCE mask turns masked labels into negatives instead
+of removing them as Eq.~(5) states. Whether following the equation helps cannot be decided
+from our single unseeded runs.
+
+Reading the paper as a reviewer adds the following weaknesses. \emph{Trade-off.} The
+Conclusion claims the gains come ``without sacrificing performance on head classes'', yet
+clean-data Recall appears only in the appendix and drops in the \emph{with}-constraint rows;
+the gains are reported as relative percentages (+51.9\% is 18 points), and no single number
+such as hR summarises the trade-off. \emph{Baselines and statistics.} The method is close to
+class-balanced undersampling, but it is not compared with simple long-tail remedies such as
+inverse-frequency reweighting, class-balanced losses or logit adjustment; the baselines are
+retrained in-house because the literature's STTran numbers did not reproduce; and no seeds,
+standard deviations or significance tests are given, even for small differences. \emph{Protocol.} The released training code evaluates on the test split
+every epoch and uses test R@20 to drive the learning-rate scheduler, and no validation
+protocol is described. \emph{Specification.} Taken literally, the paper's mask algorithm
+masks a fixed number of labels per class and would remove the rarest classes entirely;
+only the released code's opposite reading rebalances classes as intended; the curriculum is described but not used for the reported numbers;
+the \emph{semi} constraint depends on a score threshold the paper does not state; and the
+robustness tasks apply image corruptions to methods that contain no robustness mechanism.
+None of this negates the idea, but the size of the reported gains, and the claim that head
+classes do not suffer, are not established by the evidence given.
+
+% ═══════════════════════════════ CONCLUSION ═══════════════════════════════
+\section{Conclusion}
+Both papers' headline numbers can be approximately reproduced: APKGC reaches MRR 0.3691
+against 0.374 on MKG-W with the paper's configuration, and ImparTail's STTran baseline is
+within 0.74 mean Recall points on average (1.52 at most). The papers differ in what the numbers mean. For APKGC, the
+attention penalty does not fire in the released code and gives no gain, the learned noise
+level goes to 0, a retrained NativE beats APKGC under one shared protocol, and the
+robustness that motivates the paper does not appear when measured. For ImparTail, the
+released mask contradicts Eq.~(5), the written mask algorithm contradicts the method's own
+aim, and whether following the equation helps cannot be decided from single unseeded runs
+whose noise is as large as the effect. Across both, the most informative tests were not comparisons of final metrics
+but direct measurements of intermediate quantities: how often a mechanism fires, what a
+learned parameter converges to, and what the loss actually does to a masked label.
+
+\section*{Appendix}
+\subsection*{A. Per-seed results}
+Table~\ref{tab:seeds} lists the three seeds behind the run-script row of
+Table~\ref{tab:repro}.
+
+\begin{table}[!h]
+\centering
+\caption{APKGC on MKG-W with the run-script configuration, per seed (best checkpoint on test). W\&B as in Table~\ref{tab:repro}.}
+\label{tab:seeds}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccc}
+\toprule
+Seed & MRR & H@1 & H@3 & H@10 & hours\\
+\midrule
+1234 & 0.3610 & 0.2987 & 0.3864 & 0.4759 & 3.2\\
+2024 & 0.3611 & 0.2943 & 0.3907 & 0.4819 & 3.2\\
+3407 & 0.3595 & 0.2925 & 0.3917 & 0.4799 & 3.2\\
+\midrule
+Mean & 0.3605 & 0.2952 & 0.3896 & 0.4792 & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{B. All 30 robustness conditions}
+Table~\ref{tab:robustall} gives every condition of the study in Section~\ref{sec:c4}, of which
+Fig.~\ref{fig:robust} shows seven. APKGC is lower than NativE in every cell.
+
+\begin{table}[!h]
+\centering
+\caption{Test MRR on MKG-W under test-time corruption, APKGC / NativE (mean of two training seeds each; clean: 0.3621 / 0.3709). $p$: fraction of entities corrupted. W\&B as in Fig.~\ref{fig:robust}.}
+\label{tab:robustall}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{llccc}
+\toprule
+Corruption & $p$ & image & text & both\\
+\midrule
+missing & 1.0 & 0.3621 / 0.3696 & 0.2114 / 0.2331 & 0.2096 / 0.2305\\
+ & 0.5 & 0.3622 / 0.3707 & 0.2452 / 0.2810 & 0.2445 / 0.2816\\
+swapped & 1.0 & 0.3610 / 0.3654 & 0.0598 / 0.1731 & 0.0589 / 0.1714\\
+ & 0.5 & 0.3621 / 0.3680 & 0.1841 / 0.2568 & 0.1836 / 0.2567\\
+noise $\sigma{=}0.5$ & 1.0 & 0.3619 / 0.3683 & 0.3554 / 0.3643 & 0.3549 / 0.3629\\
+ & 0.5 & 0.3621 / 0.3694 & 0.3587 / 0.3669 & 0.3584 / 0.3657\\
+noise $\sigma{=}1$ & 1.0 & 0.3578 / 0.3657 & 0.3294 / 0.3491 & 0.3245 / 0.3464\\
+ & 0.5 & 0.3603 / 0.3678 & 0.3393 / 0.3550 & 0.3366 / 0.3524\\
+noise $\sigma{=}2$ & 1.0 & 0.2911 / 0.3640 & 0.2292 / 0.2871 & 0.1705 / 0.2870\\
+ & 0.5 & 0.3181 / 0.3671 & 0.2611 / 0.3109 & 0.2275 / 0.3092\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{C. The paper's hyperparameter grid on MKG-W}
+Fig.~\ref{fig:heatmkgw} redraws the MKG-W panel of the paper's RQ4 study, which reports
+H@10 rather than MRR. The headline H@10 of 0.501 is the best cell, and 8 of the 16 penalised
+configurations score below the $k=0$ row.
+
+\begin{figure}[!h]
+\centering
+\input{figures/heat_mkgw}
+\caption{H@10 on MKG-W by window $k$ and penalty rate $\theta_p$, from the paper's hyperparameter study (RQ4)~\cite{apkgc}, redrawn. Red outline: penalised configurations below the $k=0$ row.}
+\label{fig:heatmkgw}
+\end{figure}
+
+\subsection*{D. Full Recall of the ImparTail runs}
+Table~\ref{tab:itall} gives Recall and mean Recall at three values of $K$ for the released
+checkpoint and the two trained variants of Section~\ref{sec:i2}. Under \emph{semi}, both trained
+variants give the same value at every $K$, a sign that few scores pass the 0.9 threshold
+after two epochs.
+
+\begin{table}[!h]
+\centering
+\caption{STTran PredCls: the released checkpoint (ckpt) and the two variants we trained, with the released mask (rel.) and following Eq.~(5). W\&B as in Tables~\ref{tab:it} and~\ref{tab:patch}.}
+\label{tab:itall}
+\scriptsize
+\setlength{\tabcolsep}{2.4pt}
+\begin{tabular}{llcccccc}
+\toprule
+ & & R@10 & R@20 & R@50 & mR@10 & mR@20 & mR@50\\
+\midrule
+with & ckpt & 62.0 & 64.9 & 65.0 & 30.7 & 35.5 & 35.6\\
+ & rel. & 52.2 & 54.9 & 54.9 & 43.9 & 52.3 & 52.4\\
+ & Eq.~5 & 61.1 & 64.3 & 64.3 & 42.8 & 50.7 & 50.9\\
+\midrule
+no & ckpt & 70.8 & 91.7 & 99.1 & 44.3 & 63.8 & 80.7\\
+ & rel. & 70.0 & 90.3 & 99.6 & 56.7 & 77.0 & 97.6\\
+ & Eq.~5 & 75.7 & 92.3 & 99.6 & 58.0 & 76.8 & 96.5\\
+\midrule
+semi & ckpt & 70.7 & 82.1 & 83.3 & 36.2 & 52.7 & 55.3\\
+ & rel. & 21.7 & 21.7 & 21.7 & 13.8 & 13.8 & 13.8\\
+ & Eq.~5 & 33.0 & 33.1 & 33.1 & 21.8 & 22.2 & 22.2\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\balance
+\begin{thebibliography}{99}
+\bibitem{apkgc} Y. Jian, X. Luo, Z. Li, M. Zhang, Y. Zhang, K. Xiao, and X. Hou, ``APKGC: Noise-enhanced multi-modal knowledge graph completion with attention penalty,'' in \emph{Proc. AAAI Conf. Artif. Intell.}, vol.~39, 2025, pp.~15005-15013.
+\bibitem{impartail} R. Peddi, Saurabh, A. A. Shrivastava, P. Singla, and V. Gogate, ``Towards unbiased and robust spatio-temporal scene graph generation and anticipation,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2025.
+\bibitem{ikrl} R. Xie, Z. Liu, H. Luan, and M. Sun, ``Image-embodied knowledge representation learning,'' in \emph{Proc. IJCAI}, 2017, pp.~3140-3146.
+\bibitem{otkge} Z. Cao, Q. Xu, Z. Yang, Y. He, X. Cao, and Q. Huang, ``OTKGE: Multi-modal knowledge graph embeddings via optimal transport,'' in \emph{Proc. NeurIPS}, 2022.
+\bibitem{native} Y. Zhang \emph{et al.}, ``NativE: Multi-modal knowledge graph completion in the wild,'' in \emph{Proc. 47th Int. ACM SIGIR Conf.}, 2024, pp.~91-101.
+\bibitem{mkgw} D. Xu, T. Xu, S. Wu, J. Zhou, and E. Chen, ``Relation-enhanced negative sampling for multimodal knowledge graph completion,'' in \emph{Proc. 30th ACM Int. Conf. Multimedia}, 2022, pp.~3857-3866.
+\bibitem{mans} Y. Zhang, M. Chen, and W. Zhang, ``Modality-aware negative sampling for multi-modal knowledge graph embedding,'' in \emph{Proc. IJCNN}, 2023.
+\bibitem{adamf} Y. Zhang, Z. Chen, L. Liang, H. Chen, and W. Zhang, ``Unleashing the power of imbalanced modality information for multi-modal knowledge graph completion,'' in \emph{Proc. LREC-COLING}, 2024.
+\bibitem{imf} X. Li, X. Zhao, J. Xu, Y. Zhang, and C. Xing, ``IMF: Interactive multimodal fusion model for link prediction,'' in \emph{Proc. ACM Web Conf. (WWW)}, 2023, pp.~2572-2580.
+\bibitem{snag} Z. Chen \emph{et al.}, ``The power of noise: Toward a unified multi-modal knowledge graph representation framework,'' arXiv:2403.06832, 2024.
+\bibitem{opera} Q. Huang \emph{et al.}, ``OPERA: Alleviating hallucination in multi-modal large language models via over-trust penalty and retrospection-allocation,'' arXiv:2311.17911, 2023.
+\bibitem{bert} J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, ``BERT: Pre-training of deep bidirectional transformers for language understanding,'' in \emph{Proc. NAACL-HLT}, 2019, pp.~4171-4186.
+\bibitem{beit} H. Bao, L. Dong, S. Piao, and F. Wei, ``BEiT: BERT pre-training of image transformers,'' in \emph{Proc. ICLR}, 2022.
+\bibitem{rotate} Z. Sun, Z.-H. Deng, J.-Y. Nie, and J. Tang, ``RotatE: Knowledge graph embedding by relational rotation in complex space,'' in \emph{Proc. ICLR}, 2019.
+\bibitem{apkgcrepo} HubuKG, ``APKGC,'' GitHub repository, 2025. [Online]. Available: \url{https://github.com/HubuKG/APKGC}
+\bibitem{mmkg} Y. Liu, H. Li, A. García-Durán, M. Niepert, D. Oñoro-Rubio, and D. S. Rosenblum, ``MMKG: Multi-modal knowledge graphs,'' in \emph{Proc. ESWC}, 2019, pp.~459-474.
+\bibitem{pairre} L. Chao, J. He, T. Wang, and W. Chu, ``PairRE: Knowledge graph embeddings via paired relation vectors,'' in \emph{Proc. ACL-IJCNLP}, 2021, pp.~4360-4369.
+\bibitem{clark} K. Clark, U. Khandelwal, O. Levy, and C. D. Manning, ``What does BERT look at? An analysis of BERT's attention,'' in \emph{Proc. BlackboxNLP Workshop}, 2019, pp.~276-286.
+\bibitem{ag} J. Ji, R. Krishna, L. Fei-Fei, and J. C. Niebles, ``Action Genome: Actions as compositions of spatio-temporal scene graphs,'' in \emph{Proc. CVPR}, 2020.
+\bibitem{charades} G. A. Sigurdsson, G. Varol, X. Wang, A. Farhadi, I. Laptev, and A. Gupta, ``Hollywood in homes: Crowdsourcing data collection for activity understanding,'' in \emph{Proc. ECCV}, 2016.
+\bibitem{sttran} Y. Cong, W. Liao, H. Ackermann, B. Rosenhahn, and M. Y. Yang, ``Spatial-temporal transformer for dynamic scene graph generation,'' in \emph{Proc. ICCV}, 2021.
+\bibitem{dsgdetr} S. Feng, H. Mostafa, M. Nassar, S. Majumdar, and S. Tripathi, ``Exploiting long-term dependencies for generating dynamic scene graphs,'' in \emph{Proc. WACV}, 2023.
+\end{thebibliography}
+
+\end{document}

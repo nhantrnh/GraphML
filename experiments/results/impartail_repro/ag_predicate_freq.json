@@ -1,0 +1,45 @@
+{
+ "tong_cap": 417302,
+ "tan_suat": {
+  "attention_relationship": {
+   "looking_at": 155780,
+   "not_looking_at": 212640,
+   "unsure": 48882
+  },
+  "spatial_relationship": {
+   "in_front_of": 277032,
+   "behind": 52769,
+   "on_the_side_of": 79004,
+   "beneath": 65347,
+   "in": 16154,
+   "above": 6116
+  },
+  "contacting_relationship": {
+   "holding": 169741,
+   "not_contacting": 117088,
+   "touching": 57033,
+   "wearing": 7611,
+   "standing_on": 9124,
+   "covered_by": 5705,
+   "lying_on": 6330,
+   "eating": 3355,
+   "leaning_on": 12944,
+   "other_relationship": 10084,
+   "sitting_on": 43633,
+   "carrying": 4430,
+   "twisting": 93,
+   "have_it_on_the_back": 358,
+   "drinking_from": 4577,
+   "writing_on": 1159,
+   "wiping": 842
+  }
+ },
+ "nhan_moi_cap": {
+  "3": 323631,
+  "4": 75381,
+  "5": 14446,
+  "6": 3725,
+  "7": 118,
+  "8": 1
+ }
+}

@@ -1,0 +1,50 @@
+% Figure: test-time corruption of MKG-W features, APKGC vs NativE (Section IV-D).
+% Message: swapped text hurts far more than missing text, images barely matter, and APKGC is
+% below NativE in every condition. Dumbbell per condition, grouped by corrupted modality.
+% source: experiments/results/robustness/robustness_{apkgc_A_seed42,apkgc_A_seed2024,native_s42,
+% native_s1234}.json, corruption rate 1.0, mean of the two training seeds per model
+% (values checked by qa/verify_numbers.py).
+\begin{tikzpicture}[x=1cm, y=1cm, font=\sffamily\scriptsize,
+  lbl/.style={font=\sffamily\scriptsize, anchor=east, inner sep=1pt},
+  grp/.style={font=\sffamily\scriptsize\bfseries, anchor=west, inner sep=0pt},
+  val/.style={font=\sffamily\scriptsize, inner sep=0pt},
+  apkdot/.style={circle, fill=apk, inner sep=0pt, minimum size=4.6pt},
+  natdot/.style={rectangle, fill=nat, inner sep=0pt, minimum size=4.2pt}]
+\def\xo{2.55}\def\sc{10}          % plot origin (cm) and cm per unit MRR
+% group bands
+\foreach \t/\b in {0.22/-0.22, -1.22/-2.12} \fill[gz!11] (0,\t) rectangle (8.85,\b);
+% dotted grid over the data rows only
+\foreach \v in {0,0.1,0.2,0.3,0.4} \draw[black!30, dotted, line width=0.5pt] ({\xo+\sc*\v},0.22) -- ({\xo+\sc*\v},-3.45);
+% rows: y / group / condition / APKGC / NativE / bold?
+\foreach \y/\g/\c/\a/\n/\k in {
+   0.00/Clean/{}/0.3621/0.3709/0,
+  -0.55/Image/missing/0.3621/0.3696/0,
+  -0.95/{}/swapped/0.3610/0.3654/0,
+  -1.45/Text/missing/0.2114/0.2331/0,
+  -1.89/{}/swapped/0.0598/0.1731/1,
+  -2.55/{Both}/{noise $\sigma{=}1$}/0.3245/0.3464/0,
+  -2.95/{}/{noise $\sigma{=}2$}/0.1705/0.2870/0} {
+  \node[grp] at (0.08,\y) {\g};
+  \node[lbl] at (\xo-0.08,\y) {\c};
+  \ifnum\k=1 \def\lc{pk}\else\def\lc{black!30}\fi
+  \draw[\lc, line width=1.6pt] ({\xo+\sc*\a},\y) -- ({\xo+\sc*\n},\y);
+  \node[natdot] at ({\xo+\sc*\n},\y) {};
+  \node[apkdot] at ({\xo+\sc*\a},\y) {};
+  \ifnum\k=1
+    \node[val, text=apk, font=\sffamily\scriptsize\bfseries] at (7.35,\y) {\a};
+    \node[val, text=nat, font=\sffamily\scriptsize\bfseries] at (8.4,\y) {\n};
+  \else
+    \node[val, text=apk] at (7.35,\y) {\a};
+    \node[val, text=nat] at (8.4,\y) {\n};
+  \fi}
+% column headers double as the legend
+\node[apkdot] at (6.82,0.62) {}; \node[val] at (7.35,0.62) {APKGC};
+\node[natdot] at (7.95,0.62) {}; \node[val] at (8.42,0.62) {NativE};
+\node[font=\sffamily\scriptsize\itshape, anchor=west, text=black!60] at (0.08,0.62) {corrupted modality};
+% x axis
+\draw[black!60, line width=0.6pt] (\xo,-3.45) -- ({\xo+\sc*0.4},-3.45);
+\foreach \v in {0,0.1,0.2,0.3,0.4} {
+  \draw[black!60] ({\xo+\sc*\v},-3.45) -- ++(0,-0.06);
+  \node[font=\sffamily\scriptsize, anchor=north] at ({\xo+\sc*\v},-3.5) {\v};}
+\node[font=\sffamily\scriptsize] at ({\xo+\sc*0.2},-3.95) {test MRR};
+\end{tikzpicture}

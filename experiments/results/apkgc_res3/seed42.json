@@ -1,0 +1,16 @@
+{
+  "mrr": 0.3641117811203003,
+  "mr": 777.9669799804688,
+  "hit10": 0.48397284746170044,
+  "hit3": 0.3954141438007355,
+  "hit1": 0.295624703168869,
+  "elapsed": 3067.9,
+  "tag": "seed42",
+  "dataset": "MKG-W",
+  "seed": 42,
+  "epoch": 8000,
+  "save_steps": 100,
+  "seconds": 9520.2,
+  "n_evals": 15,
+  "cmd": "run_KGC_train.py -dataset=MKG-W -num_proj=1 -use_intermediate=0 -joint_way=Mformer_hd_mean -batch_size=1024 -margin=12 -epoch=8000 -dim=128 -neg_num=32 -learning_rate=1e-4 -noise_update=epoch -noise_ratio=0.2 -mask_ratio=0.7 -use_pool=1 -add_noise=1 -num_hidden_layers=1 -num_attention_heads=2 -seed=42 -save=seed42 -save_steps=100 -exp_id=seed42"
+}

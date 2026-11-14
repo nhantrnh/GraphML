@@ -1,0 +1,43 @@
+% Figure: why the released attention penalty never fires (Section IV-B).
+% Message: the paper compares each token's own score with phi; the released code compares the
+% product of the scores from a position to the end of the row with 10. With scores of mean
+% largest |A| per pass 7.50 on average (max 10.80) and 62.7% of suffix products negative, the condition
+% held in 0 of 300 passes.
+% source: experiments/results/apkgc_res/attn_scale.json (300 forward passes, firing counter);
+% upstream/APKGC/mmkgc/module/model/APKGC.py (penalty condition). The word tokens are illustrative.
+\begin{tikzpicture}[x=1cm, y=1cm, font=\sffamily\scriptsize,
+  tok/.style={draw=black, line width=0.9pt, fill=white, minimum width=1.18cm, minimum height=0.55cm,
+              inner sep=1pt, font=\sffamily\scriptsize},
+  zone/.style={rounded corners=10pt, fill=#1!13, draw=#1!75!black, line width=1pt, dash pattern=on 4.5pt off 3pt},
+  ztl/.style={font=\sffamily\scriptsize\bfseries, anchor=north west, inner sep=0pt},
+  cond/.style={font=\sffamily\scriptsize, align=center, inner sep=1pt}]
+% ---------- paper ----------
+\draw[zone=bz] (0,0) rectangle (4.25,3.0);
+\node[ztl] at (0.2,2.83) {Paper, Eq.~(9)};
+\foreach \i/\n in {0/a city,1/in France,2/.}
+  \node[tok] (p\i) at (0.8+1.33*\i,2.05) {\n};
+\node[tok, fill=pk!45, draw=dr, font=\sffamily\small\bfseries] at (p2) {.};
+\draw[-{Latex[length=1.6mm]}, line width=0.8pt] (p2.south) -- ++(0,-0.38);
+\node[cond, anchor=north] at ([yshift=-0.38cm]p2.south) {$A_i>\phi$};
+\node[cond, anchor=west, text=black!60, align=left] at (0.2,0.45) {word tokens; each token's\\own score is compared};
+% ---------- released code ----------
+\draw[zone=yz] (4.6,0) rectangle (8.85,3.0);
+\node[ztl] at (4.8,2.83) {Released code};
+\foreach \i/\n in {0/structure,1/image,2/text}
+  \node[tok] (c\i) at (5.4+1.33*\i,2.05) {\n};
+\draw[dr, line width=1pt] ([yshift=-3pt]c0.south west) -- ++(0,-0.15) -- ([yshift=-0.15cm-3pt]c2.south east) -- ++(0,0.15);
+\node[cond, anchor=north] at ([yshift=-0.33cm]c1.south) {$\prod_{j\ge i} A_j>10$};
+\node[cond, anchor=west, text=black!60, align=left] at (4.8,0.45) {three modality vectors; product\\to the end of the row};
+% ---------- measured ----------
+\node[font=\sffamily\scriptsize, anchor=north west, align=left, inner sep=0pt] at (0,-0.25)
+  {Measured over 300 forward passes of the released code: largest $|A|$ per pass\\7.50 on average (10.80 at most); 62.7\% of the suffix products negative.};
+% 300 passes as a 50 x 6 grid; none fired
+\begin{scope}[shift={(0,-1.75)}]
+\fill[gz!45] (0,0) rectangle (6.0,0.72);
+\foreach \c in {1,...,49} \draw[white, line width=0.5pt] (0.12*\c,0) -- (0.12*\c,0.72);
+\foreach \r in {1,...,5} \draw[white, line width=0.5pt] (0,0.12*\r) -- (6.0,0.12*\r);
+\draw[black!60, line width=0.6pt] (0,0) rectangle (6.0,0.72);
+\node[anchor=south west, font=\sffamily\small\bfseries, inner sep=1pt] at (6.2,0.4) {0 / 300};
+\node[anchor=north west, font=\sffamily\scriptsize, align=left, inner sep=1pt] at (6.2,0.36) {passes in which\\the penalty fired};
+\end{scope}
+\end{tikzpicture}

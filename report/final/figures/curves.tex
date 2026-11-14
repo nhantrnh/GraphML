@@ -1,0 +1,37 @@
+% Figure: test MRR during training of the released APKGC code (Section IV-A).
+% Message: every run stays below the published number; with the paper's configuration the curve
+% peaks at epoch 750 and then declines, so selecting the checkpoint on test inflates the result.
+% source: experiments/results/apkgc_res/partial_seed{1234,2024,3407}.json and
+% apkgc_res2/partial_paper_config.json (evals 1-8, every 250 epochs);
+% apkgc_res/db15k_seed42.json (every 50 epochs). Published values from Table IV.
+\begin{tikzpicture}
+\begin{axis}[paperchart, name=mkgw, width=5.7cm, height=4.2cm, scale only axis=false,
+  title={MKG-W}, xlabel={epoch}, ylabel={test MRR},
+  xmin=150, xmax=2100, ymin=0.284, ymax=0.384, clip=false,
+  xtick={500,1000,1500,2000}, ytick={0.29,0.31,0.33,0.35,0.37},
+  yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},
+  xticklabel style={/pgf/number format/1000 sep={}},
+  ymajorgrids, legend to name=curveslegend]
+\addplot[nat!55, line width=0.7pt, mark=o, mark size=1.1pt] coordinates {(250,0.3496) (500,0.3587) (750,0.3574) (1000,0.3587) (1250,0.3607) (1500,0.3610) (1750,0.3590) (2000,0.3573)};
+\addlegendentry{run script (3 seeds)}
+\addplot[nat!55, line width=0.7pt, mark=o, mark size=1.1pt, forget plot] coordinates {(250,0.3472) (500,0.3611) (750,0.3570) (1000,0.3576) (1250,0.3578) (1500,0.3581) (1750,0.3576) (2000,0.3555)};
+\addplot[nat!55, line width=0.7pt, mark=o, mark size=1.1pt, forget plot] coordinates {(250,0.3499) (500,0.3595) (750,0.3580) (1000,0.3586) (1250,0.3587) (1500,0.3594) (1750,0.3585) (2000,0.3589)};
+\addplot[apk, line width=1.2pt, mark=*, mark size=1.5pt] coordinates {(250,0.2889) (500,0.3657) (750,0.3691) (1000,0.3627) (1250,0.3581) (1500,0.3564) (1750,0.3565) (2000,0.3571)};
+\addlegendentry{paper configuration}
+\addplot[black!60, dashed, line width=0.8pt, domain=150:2100, samples=2] {0.374};
+\addlegendentry{published}
+\draw[apk, line width=0.4pt] (axis cs:750,0.3691) -- (axis cs:950,0.334) node[font=\sffamily\scriptsize, anchor=north, inner sep=1pt, align=center] {best on test\\0.3691 (ep.\ 750)};
+\draw[apk, line width=0.4pt] (axis cs:2000,0.3571) -- (axis cs:1820,0.334) node[font=\sffamily\scriptsize, anchor=north, inner sep=1pt, align=center] {final\\0.3571};
+\node[font=\sffamily\scriptsize, text=black!60, anchor=south west, inner sep=1pt] at (axis cs:160,0.3745) {published 0.374};
+\end{axis}
+\begin{axis}[paperchart, at={(mkgw.east)}, anchor=west, xshift=0.35cm, width=3.2cm, height=4.2cm,
+  title={DB15K}, xlabel={epoch},
+  xmin=0, xmax=650, ymin=0, ymax=0.4, clip=false, xtick={200,400,600}, ytick={0,0.1,0.2,0.3},
+  yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=1}, ymajorgrids]
+\addplot[apk, line width=1.2pt, mark=*, mark size=1.2pt] coordinates {(50,0.0623) (100,0.1159) (150,0.2402) (200,0.3095) (250,0.3237) (300,0.3292) (350,0.3340) (400,0.3408) (450,0.3430) (500,0.3448) (550,0.3468) (600,0.3469)};
+\addplot[black!60, dashed, line width=0.8pt, domain=0:650, samples=2] {0.364};
+\node[font=\sffamily\scriptsize, text=apk, anchor=north east, inner sep=1pt] at (axis cs:640,0.30) {0.3469};
+\node[font=\sffamily\scriptsize, text=black!60, anchor=south east, inner sep=1pt] at (axis cs:640,0.367) {0.364};
+\end{axis}
+\node[anchor=north] at ([yshift=-0.9cm]$(mkgw.south west)!0.62!(mkgw.south east)$) {\pgfplotslegendfromname{curveslegend}};
+\end{tikzpicture}

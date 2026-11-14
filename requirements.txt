@@ -1,0 +1,11 @@
+# Phiên bản thật đã dùng để sinh mọi kết quả trong probing/
+torch==2.13.0
+transformers==5.16.1
+scikit-learn==1.9.0
+numpy==2.5.2
+Pillow==12.3.0
+
+# mmkgc — KHÔNG phải gói pip. Là module của repo APKGC (../APKGC/mmkgc),
+# sanity_transe.py nạp bằng cách thêm ../APKGC vào sys.path.
+wandb
+requests

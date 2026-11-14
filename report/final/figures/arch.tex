@@ -1,0 +1,49 @@
+% Figure (full width): the APKGC architecture as described in the paper, redrawn (Section II-B).
+% Message: noise is added to the raw text vector and image patches before tokenisation (a); the
+% penalty acts on attention scores before the BERT/BEiT encoders (b); scoring reuses RotatE (c).
+% Equation numbers refer to the APKGC paper. In the released code the encoders instead run once
+% beforehand and are frozen (see figures/flow.tex). Schematic, no values.
+\begin{tikzpicture}[x=1cm, y=1cm, font=\sffamily\small,
+  box/.style={draw=black, line width=1pt, fill=white, align=center, font=\sffamily\small, inner sep=3pt,
+              minimum height=1.05cm},
+  added/.style={box, fill=pk!40, draw=dr, line width=1.2pt},
+  outbox/.style={box, fill=peach, draw=gold},
+  zone/.style={rounded corners=14pt, fill=#1!13, draw=#1!75!black, line width=1pt, dash pattern=on 4.5pt off 3pt},
+  arr/.style={-{Latex[length=2.4mm, width=1.8mm]}, line width=1pt, draw=black},
+  ztl/.style={font=\sffamily\small\bfseries, anchor=north west, inner sep=0pt},
+  eq/.style={font=\sffamily\scriptsize, text=black!60, align=center, inner sep=2pt}]
+% zones
+\draw[zone=gz] (-0.2,-0.55) rectangle (2.55,4.2);
+\draw[zone=yz] (2.95,-0.55) rectangle (8.6,4.2);
+\draw[zone=bz] (8.95,-0.55) rectangle (14.0,4.2);
+\draw[zone=gz] (14.35,-0.55) rectangle (18.6,4.2);
+\node[ztl] at (0.05,3.95) {Inputs};
+\node[ztl] at (3.2,3.95) {(a) Modality-wise noise sampling};
+\node[ztl] at (9.2,3.95) {(b) Entity feature extraction};
+\node[ztl] at (14.6,3.95) {(c) Scoring};
+% inputs
+\node[box, minimum width=2.15cm] (q) at (1.18,2.75) {query\\$(h,r,?)$};
+\node[box, minimum width=2.15cm] (t) at (1.18,1.5) {text $V_t$};
+\node[box, minimum width=2.15cm] (v) at (1.18,0.35) {image\\patches $V_v$};
+% (a)
+\node[added, minimum width=2.1cm] (noise) at (4.55,0.95) {adaptive noise\\sampling};
+\node[eq, anchor=north] at (noise.south) {Eqs. (3)-(6)\\$\theta_r$ learned};
+\node[box, minimum width=1.55cm] (tok) at (7.05,0.95) {tokenizer};
+\node[eq, anchor=north] at (tok.south) {Eq. (7)};
+% (b)
+\node[added, minimum width=2.1cm] (pen) at (10.25,0.95) {attention\\+ penalty};
+\node[eq, anchor=north] at (pen.south) {Eqs. (8)-(11)\\$\phi,\theta_p,k$ fixed};
+\node[box, minimum width=2.0cm] (enc) at (12.8,0.95) {encoders\\BERT, BEiT};
+\node[eq, anchor=north] at (enc.south) {Eq. (12): $H_t, H_v$};
+% (c)
+\node[box, minimum width=2.1cm] (inter) at (15.6,0.95) {modality\\interaction};
+\node[eq, anchor=north] at (inter.south) {Eqs. (13)-(17)};
+\node[outbox, minimum width=1.7cm] (score) at (17.55,2.6) {RotatE\\+ loss};
+\node[eq, anchor=south] at (score.north) {Eqs. (19)-(20)};
+% flow
+\draw[arr] (t.east) -- ++(0.45,0) |- ([yshift=4pt]noise.west);
+\draw[arr] (v.east) -- ++(0.45,0) |- ([yshift=-4pt]noise.west);
+\draw[arr] (noise) -- (tok); \draw[arr] (tok) -- (pen); \draw[arr] (pen) -- (enc); \draw[arr] (enc) -- (inter);
+\draw[arr] (inter.east) -| (score.south);
+\draw[arr] (q.east) -- (q.east -| score.west);
+\end{tikzpicture}

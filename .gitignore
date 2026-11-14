@@ -1,0 +1,54 @@
+# ── Không công khai ───────────────────────────────────────────────
+# Đề cương công bố và nhật ký nội bộ — giữ ở máy, không đưa lên git.
+research/
+experiments/notes/
+
+# PDF bài báo có bản quyền (AAAI, CVPR) — không phát hành lại.
+papers/
+
+# ── Mã của người khác ─────────────────────────────────────────────
+# APKGC không kèm tệp LICENSE nên mặc định giữ toàn quyền tác giả;
+# không có quyền phân phối lại. Xem README mục 5 để clone và áp lại
+# đúng 6 bản vá.
+upstream/
+
+# ImparTail CÓ giấy phép Apache 2.0 nên phát hành lại được về mặt pháp lý,
+# nhưng 53MB (phần lớn là fasterRCNN) không đáng đưa vào kho. Clone lại:
+#   git clone https://github.com/rohithpeddi/ImparTail.git impartail/upstream
+impartail/upstream/
+
+# 5 repo đối chứng, mỗi cái là một clone riêng của người khác.
+archive/
+
+# ── Tệp lớn ───────────────────────────────────────────────────────
+# Đặc trưng mô thái do tác giả APKGC phát hành trên Google Drive;
+# tệp lớn nhất 210MB, vượt giới hạn 100MB của GitHub.
+*.pth
+*.tar.gz
+
+# ── Sinh ra khi chạy ──────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.so
+*.o
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.nav
+*.snm
+*.toc
+*.synctex.gz
+
+.DS_Store
+
+# slide gốc của tác giả — chỉ để tham khảo cục bộ, không phát hành
+seminar/AAAI2025-presentation-*.pptx
+wandb/
+# bản dựng LaTeX của báo cáo cuối kỳ
+report/final/*.aux
+report/final/*.log
+report/final/*.out
+.watch_seeds.sh
+.fetch_kernel.py

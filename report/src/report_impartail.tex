@@ -1,0 +1,399 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{vietnamese}
+\setotherlanguage{english}
+\setmainfont{Times New Roman}
+\setsansfont{Helvetica Neue}
+\setmonofont{Menlo}[Scale=0.82]
+
+\usepackage[margin=2.4cm,top=2.6cm,bottom=2.4cm]{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{hcmusblue}{HTML}{1B3A5C}
+\definecolor{contextblue}{HTML}{2E86C1}
+\definecolor{codebg}{HTML}{F5F7FA}
+\definecolor{coderule}{HTML}{2E5C8A}
+\definecolor{codetext}{HTML}{A03030}
+
+\titleformat{\section}{\sffamily\large\bfseries\color{hcmusblue}}
+            {\thesection.}{0.6em}{}[\vspace{2pt}\hrule]
+\titleformat{\subsection}{\sffamily\normalsize\bfseries\color{contextblue}}
+            {\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\sffamily\small\bfseries}
+            {\thesubsubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+\setlist[itemize]{leftmargin=1.3em, topsep=3pt, itemsep=2pt}
+\setlist[enumerate]{leftmargin=1.5em, topsep=3pt, itemsep=2pt}
+
+\newcommand{\code}[1]{{\ttfamily\small\color{codetext}#1}}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  backgroundcolor=\color{codebg},
+  frame=leftline, framerule=1.5pt, rulecolor=\color{coderule},
+  framesep=6pt, xleftmargin=8pt,
+  breaklines=true, breakatwhitespace=false,
+  showstringspaces=false, columns=fullflexible,
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\color{gray}APKGC --- Báo cáo chuyên đề}
+\fancyhead[R]{\footnotesize\color{gray}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\begin{document}
+
+\begin{center}
+  {\sffamily\LARGE\bfseries\color{hcmusblue} BÁO CÁO CHUYÊN ĐỀ}\\[8pt]
+  {\sffamily\large\bfseries APKGC: Noise-enhanced Multi-Modal Knowledge Graph\\
+   Completion with Attention Penalty}\\[10pt]
+  {\small Seminar GraphML --- Học phần HP3}\\[2pt]
+  {\small ĐHQG-HCM --- Trường Đại học Khoa học Tự nhiên}
+\end{center}
+
+\vspace{4pt}
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+  \toprule
+  \textbf{Hội nghị} & The 39th AAAI Conference on Artificial Intelligence
+                      (AAAI-25), Oral, tr. 15005--15013\\
+  \textbf{Tác giả}  & Yue Jian, Xiangyu Luo, Zhifei Li, Miao Zhang, Yan Zhang,
+                      Kui Xiao, Xiaoju Hou\\
+                    & Hubei University, Trung Quốc\\
+  \textbf{Mã nguồn} & \texttt{github.com/HubuKG/APKGC}\\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{6pt}
+\section{Lý do chọn bài báo}
+\textbf{Chất lượng công bố.} CVPR 2025 chấp nhận bài ở dạng Highlight --- khoảng 387
+
+trong hơn 13.000 bài nộp, tức nhóm 3,7\% được đánh giá cao nhất.
+
+\textbf{Bài toán chưa quen thuộc.} Đồ thị cảnh không-thời gian (STSG) mở rộng đồ thị
+
+tri thức sang miền video: nút là vật thể phát hiện được trong khung hình, cạnh là quan hệ giữa chúng, và toàn bộ cấu trúc \textbf{thay đổi theo thời gian}. Đây là phần chưa được học trong khoá, khác với đồ thị tri thức tĩnh ở Chủ đề 9.
+
+\textbf{Khả năng tái lập.} Mã nguồn công khai kèm giấy phép Apache 2.0, và --- điểm
+
+hiếm trong lĩnh vực --- tác giả phát hành \textbf{26 checkpoint} qua bốn đường dẫn Box, phủ cả mô hình nền lẫn mô hình đã huấn luyện bằng phương pháp của họ, ở ba chế độ và ba tỉ lệ che.
+
+\textbf{Khả năng phản biện.} Bài có bốn đóng góp, trong đó một đóng góp --- sinh mặt nạ
+
+theo lịch (curriculum) --- cho phép đối chiếu giữa điều bài báo mô tả và điều mã nguồn thực hiện.
+
+\section{Kiến thức nền}
+\subsection{Từ đồ thị tri thức sang đồ thị cảnh}
+Đồ thị tri thức lưu sự kiện dưới dạng bộ ba \code{(chủ thể, quan hệ, khách thể)}. Đồ thị cảnh dùng cùng cấu trúc nhưng chủ thể và khách thể là \textbf{vật thể trong ảnh}, còn quan hệ là tương tác giữa chúng --- ví dụ \code{(người, đang\_cầm, cốc)}.
+
+Đồ thị cảnh \textbf{không-thời gian} thêm chiều thời gian: mỗi khung hình có một đồ thị, và các đồ thị này liên kết với nhau qua danh tính vật thể. Một vật thể xuất hiện ở khung 10 và khung 50 phải được nhận là cùng một vật thể.
+
+\subsection{Hai tác vụ}
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Tác vụ} & \textbf{Đầu vào} & \textbf{Đầu ra}\\
+\midrule
+\textbf{VidSGG} & video đã quan sát & đồ thị cho các khung đã thấy\\
+\textbf{SGA} & phần đầu video & đồ thị cho các khung \textbf{chưa thấy}\\
+\bottomrule
+\end{tabular}
+\end{center}
+Bài báo xử lý cả hai. Báo cáo này tập trung vào VidSGG vì đó là phần nhóm tái lập được.
+
+\subsection{Ba chế độ đánh giá}
+Quy ước của lĩnh vực, quyết định mô hình được cho sẵn bao nhiêu:
+
+\begin{itemize}\itemsep2pt
+\item \textbf{PredCls} --- cho sẵn hộp bao và nhãn vật thể, chỉ phân loại quan hệ
+\item \textbf{SGCls} --- cho sẵn hộp bao, phải đoán cả nhãn vật thể lẫn quan hệ
+\item \textbf{SGDet} --- không cho gì, phải phát hiện vật thể từ đầu
+\end{itemize}
+\subsection{Bộ dữ liệu Action Genome}
+Chuẩn của lĩnh vực. Chú thích quan hệ giữa \textbf{người} và vật thể trong video Charades, chia thành ba nhóm vị ngữ:
+
+\begin{center}\small
+\begin{tabular}{@{}lrl@{}}
+\toprule
+\textbf{nhóm} & \textbf{số lớp} & \textbf{ví dụ}\\
+\midrule
+attention & 3 & \code{looking\_at}, \code{not\_looking\_at}, \code{unsure}\\
+spatial & 6 & \code{in\_front\_of}, \code{behind}, \code{above}\\
+contacting & 17 & \code{holding}, \code{touching}, \code{eating}\\
+\bottomrule
+\end{tabular}
+\end{center}
+Nhóm đếm trực tiếp từ tệp chú thích: tập huấn luyện có \textbf{417.302} cặp (người, vật) mang nhãn, phân bố cực kỳ lệch --- \code{holding} xuất hiện \textbf{169.741} lần trong khi \code{twisting} chỉ \textbf{93} lần, tỉ lệ \textbf{1.825:1}.
+
+\section{Vấn đề bài báo đặt ra}
+\subsection{Phân bố đuôi dài}
+Khi một lớp chiếm gần 40\% dữ liệu còn lớp khác chiếm 0,02\%, mô hình tối ưu theo độ chính xác tổng thể sẽ học cách \textbf{luôn đoán lớp phổ biến}. Chỉ số \textbf{Recall@K} che giấu điều này vì nó tính trên toàn bộ dự đoán; \textbf{mean Recall@K} --- trung bình recall của từng lớp --- mới lộ ra.
+
+\subsection{Thiếu bền vững trước nhiễu đầu vào}
+Mô hình huấn luyện trên video sạch có còn hoạt động khi video bị mờ, nhiễu, hay thiếu sáng không? Bài báo đặt ra hai tác vụ mới --- \textbf{Robust VidSGG} và \textbf{Robust SGA} --- với 16 kiểu nhiễu đầu vào.
+
+\section{Phương pháp}
+\subsection{Masked loss --- ý tưởng trung tâm}
+Thay vì đổi kiến trúc, bài báo đổi \textbf{hàm mục tiêu}. Công thức (5) của bài:
+
+L\_ijk = (1 − m\_ijk) · L\_ijk = \{ L\_ijk nếu m = 0 ; 0 nếu m = 1 \}
+
+kèm câu giải thích: *"A mask initialized i.e. setting m = 1 \textbf{voids the contribution} of loss."* Nghĩa là nhãn bị che phải đóng góp \textbf{đúng bằng 0} vào hàm mất mát --- mô hình không học gì từ nó, chứ không phải học điều ngược lại.
+
+Ý đồ: che bớt nhãn của \textbf{lớp phổ biến} để gradient dồn về lớp hiếm.
+
+\subsection{Sinh mặt nạ}
+Algorithm 1 của bài báo:
+
+Prob[rel] = 1/|P| Tar[rel] \textasciitilde{} Multinomial(N\_target, Prob[rel])
+
+Đây là phân bố \textbf{đều trên lớp vị ngữ}, không phải trên từng thể hiện. Hệ quả: lớp phổ biến bị che nhiều hơn \emph{trong kỳ vọng}, tức cơ chế đã cân bằng lớp một cách \textbf{ngầm định}.
+
+\subsection{Curriculum}
+Bài báo mô tả tỉ lệ che tăng dần theo epoch: \code{R\_m = e × R\_s}. Ý tưởng là bắt đầu với phân bố gốc rồi chuyển dần sang phân bố cân bằng.
+
+\section{Thực nghiệm --- nhóm tái lập}
+\subsection{Cấu hình}
+Chế độ \textbf{PredCls}, mô hình nền \textbf{STTran}, toàn bộ \textbf{1.750 video} tập kiểm thử Action Genome, checkpoint do chính tác giả phát hành. Chạy trên Tesla P100 của Kaggle, khoảng một giờ.
+
+\subsection{Kết quả}
+Chín con số mean Recall so với Bảng 1 của bài báo:
+
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{ràng buộc} & \textbf{mR@10} & \textbf{mR@20} & \textbf{mR@50}\\
+\midrule
+With & 30,5 $\rightarrow$ \textbf{30,70} & 34,7 $\rightarrow$ \textbf{35,54} & 34,8 $\rightarrow$ \textbf{35,65}\\
+No & 45,7 $\rightarrow$ \textbf{44,33} & 63,4 $\rightarrow$ \textbf{63,80} & 80,5 $\rightarrow$ \textbf{80,73}\\
+Semi & 36,6 $\rightarrow$ \textbf{36,24} & 51,8 $\rightarrow$ \textbf{52,67} & 53,8 $\rightarrow$ \textbf{55,32}\\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Lệch trung bình 0,74 điểm, lớn nhất 1,52.}
+
+Cần nói rõ phạm vi: đây là số của mô hình \textbf{nền} STTran, không phải bản +ImparTail. Điều được xác nhận là \textbf{pipeline đánh giá, dữ liệu và checkpoint của tác giả tái lập đúng} --- không phải phương pháp đúng.
+
+\subsubsection{Vì sao R@50 gần như bằng R@20 --- trần bão hoà của chỉ số}
+Ở ràng buộc \emph{with}, R@20 = 64,94 nhưng R@50 = 64,96 --- tăng vỏn vẹn \textbf{0,02 điểm} khi K tăng gấp 2,5 lần. Không phải nhiễu: đây là \textbf{trần bão hoà} do dữ liệu, không do mô hình. Ở \emph{semi} hiệu ứng nhẹ hơn (82,11 $\rightarrow$ 83,27), ở \emph{no constraint} thì không có (91,70 $\rightarrow$ 99,11).
+
+Với \emph{with}/\emph{semi} constraint, mã đánh giá lấy \code{rel\_scores.argmax(1)} --- \textbf{đúng một} vị ngữ mỗi cặp (\code{evaluation\_recall.py:173-181}). Nên K không so với không gian dự đoán mà so thẳng với \textbf{số nhãn đúng trong khung}.
+
+Đếm trên tập train (198.973 khung có vật thể):
+
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{} & \textbf{max} & \textbf{K=20 phủ hết}\\
+\midrule
+vật thể mỗi khung & 8 & 100\%\\
+\textbf{nhãn mỗi khung} & \textbf{29} & \textbf{99,84\%}\\
+\bottomrule
+\end{tabular}
+\end{center}
+Chỗ dễ nhầm nằm ở đây: mỗi cặp mang \textbf{nhiều nhãn đồng thời} (attention + spatial + contacting), nên số nhãn lớn hơn hẳn số vật thể. Chỉ \textbf{0,16\% số khung} ($\approx$318 khung) có hơn 20 nhãn --- và chúng tạo ra toàn bộ khoảng hở 64,94 $\rightarrow$ 64,96.
+
+Suy ra một \textbf{tiên đoán kiểm chứng được}: vì K=50 phủ 100\% số khung, R@50 phải \textbf{bằng đúng} R@100 ở \emph{with} và \emph{semi}. Số tái lập xác nhận --- cả hai lệch đúng \textbf{0,0000}, trong khi \emph{no constraint} lệch 0,76 điểm như dự kiến. QA khẳng định với dung sai 5·10⁻³ (\code{qa/verify\_numbers.py:227}).
+
+Hệ quả cho việc đọc bảng: ở \emph{with}/\emph{semi}, \textbf{R@50 và R@100 không mang thêm thông tin} so với R@20 --- mọi so sánh giữa các phương pháp tại K lớn đều diễn ra dưới trần này. Chỉ \emph{no constraint} (xếp hạng 26 vị ngữ mỗi cặp) mới còn dư địa: ở đó K=50 chỉ bão hoà tuyệt đối trên 34,2\% số khung, K=100 trên 89,7\%.
+
+\subsection{Sáu rào cản kỹ thuật}
+Ghi lại vì chúng phản ánh tình trạng tái lập của lĩnh vực:
+
+\begin{enumerate}\itemsep2pt
+\item \textbf{torch không hợp GPU.} Kaggle cấp Tesla P100 (sm\_60), torch cài sẵn 2.10
+\end{enumerate}
+chỉ hỗ trợ từ sm\_70. Phải hạ xuống 2.4.1+cu121.
+
+\begin{enumerate}\itemsep2pt
+\item \textbf{Header \code{THC/THC.h} bị gỡ} từ torch 1.11. Mã CUDA của fasterRCNN vẫn dùng.
+\item \textbf{51 chỗ dùng API đã bỏ} --- \code{.type()}, \code{.data<T>()}.
+\item \textbf{\code{np.float}, \code{np.bool}} bị gỡ ở NumPy 1.24, còn 13 chỗ.
+\item \textbf{Thiếu dữ liệu.} Phải gắn đủ \textbf{6 part} khung hình (\textasciitilde{}58 GB); gắn 2 part cho
+\end{enumerate}
+3.200 thư mục video nghe như dư so với 1.814 video test, nhưng đó là video ngẫu nhiên trên toàn tập --- thiếu 1.224/1.814 video test, và lần chạy đầu dừng ở video 553/1.750.
+
+\begin{enumerate}\itemsep2pt
+\item \textbf{Tên checkpoint.} \code{stsg\_base.py:51} tách tên theo
+\end{enumerate}
+\code{"\_".join(split("\_")[:-2])}, nên \code{sttran\_predcls.tar} cho chuỗi rỗng --- phải đổi thành \code{sttran\_predcls\_epoch\_3.tar}.
+
+Tất cả đều giải được. Không có rào cản nào là thật.
+
+\section{Đánh giá phản biện}
+\subsection{Curriculum --- đóng góp thứ tư không tạo ra số trong bảng chính}
+Ba nguồn độc lập trong chính kho mã và bài báo cùng chỉ một hướng:
+
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{nguồn} & \textbf{nội dung}\\
+\midrule
+Remark trang 7 & *"a fixed Stochastic Masking Ratio of 0.9 achieved \textbf{similar performance}... we opted for a \textbf{fixed Masking Ratio of 0.9}"*\\
+\code{train\_sgg\_methods.py:402} & \code{is\_curriculum = False}\\
+\code{scripts/*/train.txt} & \code{grep -rn curriculum scripts/} $\rightarrow$ \textbf{không kết quả}\\
+\bottomrule
+\end{tabular}
+\end{center}
+Curriculum chiếm một phần tư Hình 3 của bài báo nhưng số trong bảng chính đến từ tỉ lệ che \textbf{cố định}. Câu hỏi để lại: đóng góp thật nằm ở \emph{curriculum} hay chỉ ở \emph{việc che}?
+
+Phát biểu thận trọng: đây là mô tả \textbf{kho mã đã công bố}, không kết luận tác giả chạy thí nghiệm thế nào --- rất có thể phiên bản họ chạy khác phiên bản commit.
+
+\subsection{Đánh đổi head--tail chỉ công bố trong phụ lục}
+Bảng 1 --- bảng chính --- có \textbf{13 lần \code{mR@}} và \textbf{0 lần \code{R@}} trần. Recall thường chỉ xuất hiện ở Bảng 6 phụ lục, và ở đó:
+
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{cấu hình} & \textbf{R@50} & \textbf{mR@50}\\
+\midrule
+SGCLS STTran S=10 & 46,5 $\rightarrow$ 41,1 (\textbf{−11,6\%}) & 27,6 $\rightarrow$ 36,2 (+31,2\%)\\
+SGCLS DSGDetr S=10 & 49,4 $\rightarrow$ 42,0 (\textbf{−15,0\%}) & 28,1 $\rightarrow$ 36,0 (+28,1\%)\\
+\bottomrule
+\end{tabular}
+\end{center}
+Trên Bảng 3 (độ bền), nhóm đếm được \textbf{21/30 ô Recall giảm (70\%)} trong khi \textbf{0/90 ô mean Recall giảm} --- đánh đổi có hệ thống, không phải nhiễu.
+
+Phần Limitations của bài gọi mức này là \emph{"although small"}. Thực tế là \textbf{6--17\%}.
+
+\subsection{Nhưng phải công bằng với bài báo}
+Nhóm tính \textbf{trung bình điều hoà hR} --- chỉ số cân bằng R và mR mà mã của chính tác giả đã tính sẵn (\code{evaluation\_recall.py:66-69}) nhưng bài báo không công bố:
+
+\begin{center}\small
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+\textbf{K} & \textbf{$\Delta$R} & \textbf{$\Delta$mR} & \textbf{\textbf{$\Delta$hR}}\\
+\midrule
+10 & −1,7 & +26,1 & \textbf{+17,7}\\
+20 & −3,0 & +25,2 & \textbf{+15,4}\\
+50 & 0,0 & +13,0 & \textbf{+7,4}\\
+\bottomrule
+\end{tabular}
+\end{center}
+hR tăng \textbf{7--18 điểm}. Phương pháp \textbf{có lợi thật}, không phải chỉ dịch chuyển chỉ số. Nếu chỉ nêu mặt xấu thì đó là xuyên tạc.
+
+\subsection{Bốn hạn chế tác giả tự nêu}
+Phụ lục trang 15: chỉ thí nghiệm trên Action Genome; 16 kiểu nhiễu chưa phủ hết thực tế; có đánh đổi head--tail; chỉ dùng recall/mean recall nên không đo được quan hệ bậc cao.
+
+\section{Rà soát tài liệu}
+Nhóm khảo sát các công trình 2024--2026 để xem hạn chế nào đã được khắc phục.
+
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{hạn chế} & \textbf{đã ai làm chưa}\\
+\midrule
+Chỉ Action Genome & \textbf{Chính nhóm tác giả} --- ActionGenome4D (preprint 3/2026) nâng lên 4D\\
+Đuôi dài & 7/8 bài cùng làm --- VISA (CVPR 2025), STABILE (TMM 2025), TD²-Net (AAAI 2024)\\
+Nhất quán thời gian & 6/8 bài \textbf{than phiền} nhưng \textbf{không bài nào} đề xuất chỉ số đo nó\\
+Robustness sau ImparTail & \textbf{không tìm thấy} bài nối tiếp nào\\
+\bottomrule
+\end{tabular}
+\end{center}
+Hai kết quả âm đáng ghi: \textbf{không tồn tại} "Action Genome++" hay bản gán nhãn lại nào, và \textbf{không bài nào} trong 304 công trình trích dẫn Action Genome phê bình dữ liệu hoặc cách đánh giá của chính nó.
+
+\section{Hướng cải tiến đề xuất}
+\subsection{Cài đặt mặt nạ lệch khỏi công thức (5)}
+Mã nhánh BCE (\code{stsg\_base.py:305-318}) dựng vector đích toàn 0 rồi chỉ set 1 cho nhãn \textbf{sống sót}. Với \code{nn.BCELoss()} reduction \code{'mean'} trên toàn bộ \code{max\_len} phần tử, nhãn dương bị che trở thành \textbf{nhãn âm} và \textbf{vẫn sinh gradient}.
+
+Kiểm bằng đạo hàm dạng đóng của BCE (q = 0,6, tỉ lệ giữ 10\%, 200.000 mẫu):
+
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{} & \textbf{gradient}\\
+\midrule
+Đúng (y = 1) & \textbf{−1,667} --- đẩy xác suất lên\\
+Loại số hạng khỏi loss & −0,168 --- cùng dấu\\
+\textbf{Biến thành âm (mã công bố)} & \textbf{+2,084} --- \textbf{ngược dấu}\\
+\bottomrule
+\end{tabular}
+\end{center}
+Không phép đổi thang nào sửa được dấu.
+
+\textbf{Ngưỡng đổi dấu.} Mã cho \code{E[∂L/∂z] ∝ (q − p\_c)} trong khi đúng ra phải là
+
+\code{∝ (q − 1) < 0}. Suy ra cập nhật đảo chiều khi mô hình tin vào nhãn nhiều hơn \code{p\_c}. Với \code{holding}, \code{p\_c = 0,016} --- mô hình chỉ cần gán \textbf{>1,6\%} xác suất cho một quan hệ \textbf{có thật} là bị đẩy ngược.
+
+\subsection{Kết quả sửa}
+Nhóm vá theo đúng công thức (5) --- \code{BCELoss(reduction='none')}, nhân mặt nạ theo từng phần tử, chuẩn hoá theo số phần tử hiệu lực --- rồi chạy hai nhánh cùng cấu hình, khác đúng một cờ:
+
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{ràng buộc} & \textbf{R@50 gốc $\rightarrow$ vá} & \textbf{mR@50 gốc $\rightarrow$ vá} & \textbf{$\Delta$hR}\\
+\midrule
+with & 54,9 $\rightarrow$ \textbf{64,3} (+9,4) & 52,4 $\rightarrow$ 50,9 (−1,6) & \textbf{+3,2}\\
+no & 99,6 $\rightarrow$ 99,6 (0,0) & 97,6 $\rightarrow$ 96,5 (−1,1) & −0,5\\
+semi & 21,7 $\rightarrow$ \textbf{33,1} (+11,4) & 13,8 $\rightarrow$ \textbf{22,2} (+8,4) & \textbf{+9,7}\\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{$\Delta$hR trung bình +4,11 điểm.} Ở semi-constraint \textbf{cả hai chỉ số cùng tăng}.
+
+\textbf{Giới hạn phải nêu:} mỗi nhánh mới chạy \textbf{một seed, hai epoch} thay vì bốn
+
+của tác giả. Con số tuyệt đối không so trực tiếp với bảng bài báo được, chỉ so hai nhánh với nhau. Cần ít nhất ba seed trước khi coi là kết luận.
+
+\subsection{Hướng đã kiểm và loại}
+Ghi lại để không ai lặp lại:
+
+\begin{itemize}\itemsep2pt
+\item \textbf{Che theo tần suất lớp.} Kiểm giải tích cho thấy sơ đồ này \textbf{trùng 0,0\%}
+\end{itemize}
+với Algorithm 1 --- \code{Prob[rel] = 1/|P|} đã cân bằng lớp ngầm định.
+
+\begin{itemize}\itemsep2pt
+\item \textbf{Giữ cặp bị vứt bằng mục tiêu nhị phân.} Khi mặt nạ che hết nhãn của một
+\end{itemize}
+cặp, mã loại luôn cả cặp (\code{continue}) --- ở tỉ lệ giữ 10\% là \textbf{58\%} số cặp. Nhưng \textbf{88,2\%} cặp bị vứt thuộc 4 lớp phổ biến nhất, nên dạy "cặp này có quan hệ" sẽ củng cố đúng thiên lệch cần phá.
+
+\section{Kết luận}
+ImparTail đổi \textbf{hàm mục tiêu} thay vì kiến trúc --- một phép nhân với mặt nạ nhị phân, không thêm tham số. Cách tiếp cận này gọn và gắn được lên nhiều mô hình nền, đó là điểm mạnh thật.
+
+Nhóm tái lập được kết quả của mô hình nền với sai lệch \textbf{0,74 điểm}, xác nhận pipeline đánh giá và checkpoint của tác giả hoạt động đúng. Sáu rào cản kỹ thuật gặp phải đều giải được, không cái nào là thật.
+
+Ba quan sát từ việc đọc mã đối chiếu bài báo: curriculum không tạo ra số trong bảng chính; đánh đổi head--tail có thật ở mức 6--17\% nhưng chỉ công bố trong phụ lục; và cài đặt mặt nạ lệch khỏi công thức (5) theo hướng đổi dấu gradient. Sửa điểm cuối cho \textbf{+4,11 điểm hR}, với Recall tăng tới \textbf{+11,4} điểm.
+
+Cần nói cho đúng mức: những quan sát này \textbf{không} phủ nhận đóng góp của bài báo. Tính trung bình điều hoà từ chính số liệu của họ cho thấy phương pháp tăng \textbf{7--18 điểm} --- nó có lợi thật. Điều báo cáo này chỉ ra là một phần cái giá được báo cáo có thể đến từ cài đặt chứ không từ bản chất phương pháp.
+
+\section{Tài liệu tham khảo chính}
+\begin{enumerate}\itemsep2pt
+\item R. Peddi, Saurabh, A. A. Shrivastava, P. Singla, and V. Gogate, "Towards
+\end{enumerate}
+Unbiased and Robust Spatio-Temporal Scene Graph Generation and Anticipation," in \emph{CVPR}, 2025. DOI 10.1109/cvpr52734.2025.00808
+
+\begin{enumerate}\itemsep2pt
+\item Y. Cong, W. Liao, H. Ackermann, B. Rosenhahn, and M. Y. Yang,
+\end{enumerate}
+"Spatial-Temporal Transformer for Dynamic Scene Graph Generation," in \emph{ICCV}, 2021. DOI 10.1109/iccv48922.2021.01606
+
+\begin{enumerate}\itemsep2pt
+\item J. Ji, R. Krishna, L. Fei-Fei, and J. C. Niebles, "Action Genome: Actions as
+\end{enumerate}
+Compositions of Spatio-temporal Scene Graphs," in \emph{CVPR}, 2020. DOI 10.1109/cvpr42600.2020.01025
+
+\begin{enumerate}\itemsep2pt
+\item S. Nag, K. Min, S. Tripathi, and A. K. Roy-Chowdhury, "Unbiased Scene Graph
+\end{enumerate}
+Generation in Videos," in \emph{CVPR}, 2023. DOI 10.1109/cvpr52729.2023.02184
+
+\begin{enumerate}\itemsep2pt
+\item M. Grunde-McLaughlin, R. Krishna, and M. Agrawala, "AGQA: A Benchmark for
+\end{enumerate}
+Compositional Spatio-Temporal Reasoning," in \emph{CVPR}, 2021. DOI 10.1109/cvpr46437.2021.01113
+
+\end{document}

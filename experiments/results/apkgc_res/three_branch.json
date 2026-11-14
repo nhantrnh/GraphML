@@ -1,0 +1,33 @@
+{
+ "seed": 42,
+ "dataset": "MKG-W",
+ "A_goc": {
+  "mrr": 0.3629,
+  "hit1": 0.2933,
+  "phut": 252.4
+ },
+ "B_baibao": {
+  "mrr": 0.3629,
+  "hit1": 0.2933,
+  "phut": 246.3
+ },
+ "C_entropy": {
+  "mrr": 0.363,
+  "hit1": 0.2934
+ },
+ "ghi_chu": "Bon bien the tren MKG-W seed 42. Tat nhieu lam MRR TANG +0,0026 (2,9x std) — nguoc chieu tien doan cua bai.",
+ "D_khong_nhieu": {
+  "mrr": 0.3655,
+  "ghi_chu": "add_noise=0, phat theo ma goc"
+ },
+ "E_khong_nhieu_entropy": {
+  "mrr": 0.3651,
+  "ghi_chu": "add_noise=0, phat theo entropy"
+ },
+ "B2_cap05": {
+  "mrr": 0.3605,
+  "hit1": 0.2964,
+  "hit10": 0.4815,
+  "ghi_chu": "cắt xác suất attention ở 0,5 như Hình 4, chia dư cho lân cận"
+ }
+}

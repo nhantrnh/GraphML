@@ -1,0 +1,44 @@
+% Figure: data flow in the released APKGC code (Section II-C); answers which parameters the loss
+% updates and which steps run only in training.
+% source: upstream/APKGC/mmkgc/module/model/APKGC.py (requires_grad_(False) on the feature tables;
+% noise only when the projection is in training mode; penalty inside the attention function;
+% theta_r is an nn.Parameter, theta_n only enters a comparison). Schematic, no values.
+\begin{tikzpicture}[x=1cm, y=1cm, font=\sffamily\scriptsize,
+  box/.style={draw=black, line width=0.9pt, fill=white, align=center, font=\sffamily\scriptsize,
+              inner sep=2pt, minimum width=1.75cm, minimum height=0.85cm},
+  frozen/.style={box, fill=tl!45, draw=dt},
+  added/.style={box, fill=pk!40, draw=dr, line width=1.1pt},
+  outbox/.style={box, fill=peach, draw=gold},
+  note/.style={font=\sffamily\scriptsize, text=black!60, align=center, inner sep=1pt, anchor=north},
+  arr/.style={-{Latex[length=2mm, width=1.6mm]}, line width=0.9pt, draw=black}]
+% row 1
+\node[frozen] (f) at (0.95,2.3) {{\color{dt}\faIcon{snowflake}} BERT,\\BEiT features};
+\node[added] (n) at (3.2,2.3) {noise\\sampling};
+\node[box] (p) at (5.45,2.3) {text, image\\projection};
+\node[added] (a) at (7.7,2.3) {attention\\+ penalty};
+% row 2 (right to left)
+\node[box] (e) at (7.7,0.35) {encoder,\\average};
+\node[box] (r) at (5.45,0.35) {RotatE\\score};
+\node[outbox] (l) at (3.2,0.35) {loss (20)};
+% notes: what the loss updates, when the step runs
+\node[note] at (f.south) {frozen, no gradient};
+\node[note] at (n.south) {learns $\theta_r$ only;\\\textbf{train only}};
+\node[note] at (p.south) {learned};
+\node[note] at (a.south) {$Q,K,V$ learned;\\penalty fixed};
+\node[note] at (e.south) {learned};
+\node[note] at (r.south) {entity, relation\\vectors learned};
+\node[note] at (l.south) {backprop starts;\\\textbf{train only}};
+% forward flow
+\draw[arr] (f) -- (n); \draw[arr] (n) -- (p); \draw[arr] (p) -- (a);
+\draw[arr] (a.east) -- ++(0.35,0) |- (e.east);
+\draw[arr] (e) -- (r); \draw[arr] (r) -- (l);
+% gradient stops at the frozen features
+\draw[dr, line width=1.4pt] ([xshift=0.18cm]f.east) ++(0,0.17) -- ++(0,-0.34);
+% legend in one row below
+\begin{scope}[shift={(0.1,-1.15)}]
+\fill[tl!45, draw=dt] (0,-0.1) rectangle ++(0.32,0.2); \node[anchor=west, inner sep=0pt] at (0.42,0) {frozen};
+\fill[pk!40, draw=dr, line width=0.8pt] (1.75,-0.1) rectangle ++(0.32,0.2); \node[anchor=west, inner sep=0pt] at (2.17,0) {added by APKGC};
+\draw[dr, line width=1.4pt] (4.55,-0.13) -- (4.55,0.13); \node[anchor=west, inner sep=0pt] at (4.72,0) {gradient stops};
+\node[anchor=west, inner sep=0pt] at (6.6,0) {\textbf{bold}: train only};
+\end{scope}
+\end{tikzpicture}

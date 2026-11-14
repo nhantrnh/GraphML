@@ -1,0 +1,26 @@
+% Figure (appendix): H@10 on MKG-W by window k and penalty rate theta_p (Section IV-B).
+% Message: 8 of the 16 penalised configurations score below the k = 0 row (0.491), one ties;
+% the headline H@10 0.501 is the best cell (k = 1, theta_p = 0.01).
+% source: the APKGC paper, hyperparameter study RQ4, Fig. 3(b) (published numbers, redrawn).
+\begin{tikzpicture}[x=1.05cm, y=0.5cm, font=\sffamily\scriptsize]
+\foreach \r/\a/\b/\c/\d in {4/0.490/0.485/0.483/0.481, 3/0.494/0.491/0.489/0.485, 2/0.495/0.490/0.499/0.488, 1/0.493/0.496/0.501/0.492, 0/0.491/0.491/0.491/0.491} {
+  \foreach \v [count=\cc from 0] in {\a,\b,\c,\d} {
+    \pgfmathsetmacro{\pc}{max(8,min(78,(\v-0.480)/0.021*70+8))}
+    \fill[db!\pc] (\cc,\r) rectangle (\cc+1,\r+1);
+    \pgfmathparse{\pc>55?"white":"black"}\edef\tc{\pgfmathresult}
+    \node[text=\tc] at (\cc+0.5,\r+0.5) {\v};
+  }
+  \node[left] at (0,\r+0.5) {\r};
+}
+% cell borders drawn per line: `grid` steps in absolute cm, not in the picture's x/y units
+\foreach \c in {1,2,3} \draw[white, line width=1.2pt] (\c,0) -- (\c,5);
+\foreach \r in {1,2,3,4} \draw[white, line width=1.2pt] (0,\r) -- (4,\r);
+% outline the penalised cells that score below the k = 0 row (0.491)
+\foreach \cc/\r in {0/4, 1/4, 2/4, 3/4, 2/3, 3/3, 1/2, 3/2} \draw[dr, line width=1.1pt] (\cc+0.06,\r+0.06) rectangle (\cc+0.94,\r+0.94);
+\draw[black, line width=0.9pt, dash pattern=on 3pt off 2pt] (0,0) rectangle (4,1);
+\foreach \l [count=\cc from 0] in {{10\textsuperscript{$-$4}},0.001,0.01,0.1} \node[below] at (\cc+0.5,0) {\l};
+\node at (2,-1.25) {penalty rate $\theta_p$};
+\node[rotate=90] at (-0.75,2.5) {window $k$};
+\node[anchor=west, align=left, font=\sffamily\scriptsize] at (4.15,0.5) {$k=0$:\\no penalty};
+\draw[dr, line width=1pt] (4.2,2.15) rectangle (4.5,2.45); \node[anchor=west, font=\sffamily\scriptsize, align=left] at (4.55,2.3) {below\\no penalty};
+\end{tikzpicture}

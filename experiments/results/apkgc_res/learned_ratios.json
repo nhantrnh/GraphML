@@ -1,0 +1,9 @@
+{
+  "nguon": "checkpoint tốt nhất của biến thể A (mã công bố), kernel thnhnhntrng/apkgc-three-branch phiên bản 1, file APKGC/output/mmkgc/checkpoint/seed42-MRR0.3628733158111572",
+  "dataset": "MKG-W",
+  "seed": 42,
+  "mask_ratio_theta_r": {"khoi_tao": 0.7, "sau_huan_luyen": -0.00039516983088105917},
+  "noise_ratio_theta_n": {"khoi_tao": 0.2, "sau_huan_luyen": 0.20000000298023224},
+  "kiem_tra_bo_doc": {"pi_const": 3.1415927410125732, "margin": 12.0, "zero_const": 0.0},
+  "ghi_chu": "Đọc trực tiếp từ state_dict (định dạng zip của torch.save) trong phần output tải về; tệp tải bị ngắt giữa chừng nhưng các tham số vô hướng nằm ở đầu checkpoint. theta_r giảm từ 0,7 về gần 0; theta_n không đổi vì chỉ dùng trong phép so sánh, không nhận gradient."
+}

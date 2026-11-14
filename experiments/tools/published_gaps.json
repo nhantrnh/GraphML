@@ -1,0 +1,85 @@
+{
+  "_note": "Khoang cach MRR giua phuong phap de xuat va a quan, lay tu bang ket qua da cong bo. Chi dua vao nhung con so da TU DOC tu ban PDF goc.",
+  "_verification_method": "Doc truc tiep file papers/APKGC_AAAI2025.pdf, trang 15010 (Bang 2, Bang 3) va 15011 (Bang 4).",
+  "_verified_on": "2026-08-19",
+
+  "gaps": [
+    {
+      "label": "APKGC vs NativE",
+      "dataset": "DB15K",
+      "proposed": 0.364,
+      "runner_up": 0.362,
+      "gap": 0.002,
+      "source": "APKGC AAAI 2025, Bang 2, tr. 15010. NativE (SIGIR'24) = 0.362 la a quan (gach chan trong bang goc).",
+      "url": "https://ojs.aaai.org/index.php/AAAI/article/view/33645",
+      "verified": true
+    },
+    {
+      "label": "APKGC vs NativE",
+      "dataset": "MKG-W",
+      "proposed": 0.374,
+      "runner_up": 0.366,
+      "gap": 0.008,
+      "source": "APKGC AAAI 2025, Bang 2, tr. 15010. NativE = 0.366.",
+      "url": "https://ojs.aaai.org/index.php/AAAI/article/view/33645",
+      "verified": true
+    },
+    {
+      "label": "Dong gop cua attention penalty",
+      "dataset": "MKG-W",
+      "proposed": 0.374,
+      "runner_up": 0.360,
+      "gap": 0.014,
+      "source": "APKGC AAAI 2025, Bang 4 (ablation), tr. 15011, dong 'w/o penalty' = 0.360.",
+      "url": "https://ojs.aaai.org/index.php/AAAI/article/view/33645",
+      "verified": true
+    },
+    {
+      "label": "Dong gop cua noise sampling",
+      "dataset": "MKG-W",
+      "proposed": 0.374,
+      "runner_up": 0.358,
+      "gap": 0.016,
+      "source": "APKGC AAAI 2025, Bang 4 (ablation), tr. 15011, dong 'w/o noise' = 0.358.",
+      "url": "https://ojs.aaai.org/index.php/AAAI/article/view/33645",
+      "verified": true
+    }
+  ],
+
+  "_apkgc_config_discrepancy": {
+    "note": "Phat hien khi doi chieu bai bao voi ma nguon. Day la mot bang chung doc lap ve khoang cach giua bai bao va cai dat.",
+    "paper_says": {
+      "source": "APKGC AAAI 2025, tr. 15010, muc 'Parameter Settings'",
+      "quote": "the embedding dimension is set to 128, the batch size is set to 2048, the number of negative samples is set to 64, and the learning rate is set to 1e-4",
+      "embedding_dim": 128,
+      "batch_size": 2048,
+      "neg_samples": 64,
+      "learning_rate": "1e-4",
+      "gpu": "Nvidia RTX 4090"
+    },
+    "readme_says": {
+      "source": "github.com/HubuKG/APKGC README, muc Run",
+      "EMB_DIM": 128,
+      "NUM_BATCH": 2048,
+      "NEG_NUM": 64,
+      "comment": "khop voi bai bao"
+    },
+    "code_actually_uses": {
+      "source": "scripts/run_base.sh dong 2-11 (file ma run.sh thuc su goi)",
+      "EMB_DIM": 128,
+      "NUM_BATCH": 1024,
+      "NEG_NUM": 32,
+      "comment": "batch_size va neg_num deu chi bang MOT NUA gia tri cong bo"
+    },
+    "impact": "Chay dung theo huong dan (bash run.sh) se dung cau hinh khac bai bao. Khong the tai lap so lieu Bang 2 neu khong sua tay."
+  },
+
+  "_pending_verification": [
+    {
+      "label": "M-Hyper vs MyGO",
+      "dataset": "MKG-W",
+      "reported_gap": 0.0092,
+      "note": "Nguon thu cap bao MyGO 36.10 -> M-Hyper 37.02 tu Bang 1 cua M-Hyper (arXiv 2509.23714). CHUA tu doc ban goc. Khong dung trong bai bao cho den khi xac minh."
+    }
+  ]
+}

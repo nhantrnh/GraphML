@@ -1,0 +1,342 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{vietnamese}
+\setotherlanguage{english}
+\setmainfont{Times New Roman}
+\setsansfont{Helvetica Neue}
+\setmonofont{Menlo}[Scale=0.82]
+
+\usepackage[margin=2.4cm,top=2.6cm,bottom=2.4cm]{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{hcmusblue}{HTML}{1B3A5C}
+\definecolor{contextblue}{HTML}{2E86C1}
+\definecolor{codebg}{HTML}{F5F7FA}
+\definecolor{coderule}{HTML}{2E5C8A}
+\definecolor{codetext}{HTML}{A03030}
+
+\titleformat{\section}{\sffamily\large\bfseries\color{hcmusblue}}
+            {\thesection.}{0.6em}{}[\vspace{2pt}\hrule]
+\titleformat{\subsection}{\sffamily\normalsize\bfseries\color{contextblue}}
+            {\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\sffamily\small\bfseries}
+            {\thesubsubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+\setlist[itemize]{leftmargin=1.3em, topsep=3pt, itemsep=2pt}
+\setlist[enumerate]{leftmargin=1.5em, topsep=3pt, itemsep=2pt}
+
+\newcommand{\code}[1]{{\ttfamily\small\color{codetext}#1}}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  backgroundcolor=\color{codebg},
+  frame=leftline, framerule=1.5pt, rulecolor=\color{coderule},
+  framesep=6pt, xleftmargin=8pt,
+  breaklines=true, breakatwhitespace=false,
+  showstringspaces=false, columns=fullflexible,
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\color{gray}APKGC --- Báo cáo chuyên đề}
+\fancyhead[R]{\footnotesize\color{gray}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\begin{document}
+
+\begin{center}
+  {\sffamily\LARGE\bfseries\color{hcmusblue} BÁO CÁO CHUYÊN ĐỀ}\\[8pt]
+  {\sffamily\large\bfseries APKGC: Noise-enhanced Multi-Modal Knowledge Graph\\
+   Completion with Attention Penalty}\\[10pt]
+  {\small Seminar GraphML --- Học phần HP3}\\[2pt]
+  {\small ĐHQG-HCM --- Trường Đại học Khoa học Tự nhiên}
+\end{center}
+
+\vspace{4pt}
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+  \toprule
+  \textbf{Hội nghị} & The 39th AAAI Conference on Artificial Intelligence
+                      (AAAI-25), Oral, tr. 15005--15013\\
+  \textbf{Tác giả}  & Yue Jian, Xiangyu Luo, Zhifei Li, Miao Zhang, Yan Zhang,
+                      Kui Xiao, Xiaoju Hou\\
+                    & Hubei University, Trung Quốc\\
+  \textbf{Mã nguồn} & \texttt{github.com/HubuKG/APKGC}\\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{6pt}
+\section{Dàn ý trình bày --- ImparTail}
+\textbf{Bài báo:} Towards Unbiased and Robust Spatio-Temporal Scene Graph Generation
+
+and Anticipation --- Peddi, Saurabh, Shrivastava, Singla, Gogate. CVPR 2025 (Highlight).
+
+\textbf{Bộ slide:} \code{slides/ImparTail\_Slides.pdf}, 26 trang. \textbf{Thời lượng:} 60 phút.
+
+\section{Phân bổ thời gian}
+\begin{center}\small
+\begin{tabular}{@{}llrr@{}}
+\toprule
+\textbf{Phần} & \textbf{Slide} & \textbf{Phút} & \textbf{Cộng dồn}\\
+\midrule
+1. Mở đầu & 1--2 & 2 & 2\\
+2. Kiến thức nền & 3--5 & 9 & 11\\
+3. Vấn đề đuôi dài & 6--7 & 7 & 18\\
+4. Phương pháp & 8--12 & 17 & 35\\
+5. Đóng góp thứ ba (độ bền) & 13 & 6 & 41\\
+6. Thực nghiệm & 14--16 & 8 & 49\\
+7. Đọc phản biện & 17--19 & 8 & 57\\
+8. Kết \& hỏi đáp & 20 & 3 & 60\\
+\bottomrule
+\end{tabular}
+\end{center}
+Nếu cháy giờ: cắt slide 7 (các hướng đã có) và rút gọn slide 16 xuống 2 phút. \textbf{Không cắt} slide 12 (bộ ba đi xuyên mô hình) và 17 (phát hiện về curriculum) --- đó là hai chỗ người nghe nhớ nhất.
+
+\section{Phần 1 --- Mở đầu (2 phút)}
+Mở bằng một câu hỏi, không phải bằng tên bài báo:
+
+> "Nhìn một đoạn video người ta pha cà phê. Máy tính cần trả lời được: ai đang > làm gì với cái gì, và \textbf{sắp} làm gì tiếp. Đó là bài toán hôm nay."
+
+Nói rõ đây là \textbf{CVPR 2025 Highlight} --- top khoảng 3\% số bài nộp. Rồi vào luôn.
+
+\section{Phần 2 --- Kiến thức nền (9 phút)}
+\subsection{Slide 3 --- Scene graph: ảnh tĩnh sang video (3 phút)}
+Bắt đầu từ cái quen thuộc: scene graph tĩnh là đồ thị, đỉnh là vật thể, cạnh là quan hệ. Một câu về Visual Genome.
+
+Rồi chỉ vào hình ba khung: \textbf{cùng một cặp (người, cốc)}, quan hệ đổi từ \emph{nhìn} $\rightarrow$ \emph{chạm} $\rightarrow$ \emph{uống}.
+
+> "Đây là thứ scene graph tĩnh không diễn tả được. Ba tấm ảnh rời cho ba đồ thị > rời. Cái ta cần là \textbf{một chuỗi đồ thị có liên hệ với nhau theo thời gian}."
+
+\subsection{Slide 4 --- Ký hiệu (3 phút)}
+Đi chậm, vì cả bài dùng lại. Viết lên bảng nếu có:
+
+\begin{itemize}\itemsep2pt
+\item Đoạn video \$V\_1\textasciicircum{}T\$ gồm \$T\$ khung
+\item Trong khung \$t\$: vật thể \$o\_k\textasciicircum{}t\$, mỗi cái có hộp bao và nhãn lớp
+\item Vị ngữ \$p\_\{ijk\}\textasciicircum{}t\$ nối cặp \$(o\_i\textasciicircum{}t, o\_j\textasciicircum{}t)\$
+\item \textbf{Bộ ba} \$r\_\{ijk\}\textasciicircum{}t = (o\_i\textasciicircum{}t, p\_\{ijk\}\textasciicircum{}t, o\_j\textasciicircum{}t)\$ --- đây là đơn vị cơ bản
+\end{itemize}
+Rồi hai tác vụ, nhấn vào chỗ khác nhau:
+
+> "VidSGG nhìn khung nào thì mô tả khung đó. SGA phải \textbf{đoán khung chưa nhìn > thấy}. Cùng bộ máy, nhưng SGA khó hơn hẳn."
+
+\subsection{Slide 5 --- Ví dụ đầu vào (3 phút)}
+Đây là slide đầu tiên người nghe thực sự \emph{thấy} bài toán. Đi từ trái sang phải:
+
+\begin{enumerate}\itemsep2pt
+\item Hai khung đã quan sát $\rightarrow$ VidSGG sinh (người, \textbf{looking\_at}, sổ tay)
+\item Mũi tên SGA
+\item Hai khung chưa quan sát $\rightarrow$ dự đoán (người, \textbf{touching}, cốc) rồi
+\end{enumerate}
+(người, \textbf{drinking\_from}, cốc)
+
+> "Chú ý chuỗi \emph{chạm} rồi \emph{uống}. Mô hình phải học rằng chạm vào cốc thường dẫn > tới uống. Đó là tri thức về \textbf{diễn tiến}, không phải về một khung hình."
+
+\section{Phần 3 --- Vấn đề đuôi dài (7 phút)}
+\subsection{Slide 6 --- Phân phối đuôi dài (4 phút)}
+Chỉ vào biểu đồ cột. Bốn cột xanh cao vống, phần đuôi đỏ dẹt lét.
+
+Câu chốt của cả phần này:
+
+> "Vấn đề không phải là đuôi dài. Vấn đề là \textbf{lớp ở đuôi mới là lớp đáng giá}. > Biết 'người ở phía trước cái cốc' gần như vô dụng. Biết 'người đang uống từ > cái cốc' mới là hiểu cảnh. Mà mô hình lại học ngược lại."
+
+Giải thích vì sao \textbf{mean Recall} chứ không Recall:
+
+> "Recall@K cộng gộp mọi dự đoán, nên lớp head chiếm đa số và che mất điểm yếu > ở đuôi. mean Recall tính recall \textbf{từng lớp rồi lấy trung bình} --- mỗi lớp một > phiếu. Đổi chỉ số là đổi cả bài toán."
+
+\subsection{Slide 7 --- Các hướng đã có (3 phút) --- \emph{cắt được nếu thiếu giờ}}
+Lướt nhanh bảng bốn hướng. Dừng ở dòng cuối:
+
+> "Ba hướng trên đều \textbf{thêm tham số hoặc thêm mô-đun}. ImparTail không thêm gì > cả --- nó chỉ đổi hàm mất mát. Đó là lý do nó gắn được lên sáu mô hình nền khác > nhau."
+
+\section{Phần 4 --- Phương pháp (17 phút, trọng tâm)}
+\subsection{Slide 8 --- Toàn cảnh pipeline (3 phút)}
+Chỉ vào dấu ngoặc lớn: \textbf{ba khối đầu lấy nguyên từ mô hình nền}. Chỉ khối cuối là của ImparTail.
+
+> "Nói cách khác: forward pass \textbf{không đổi một dòng nào}. Chỉ backward đổi."
+
+\subsection{Slide 9 --- Masked Loss (5 phút, chậm nhất phần này)}
+Viết công thức lên bảng:
+
+\$\$\textbackslash\{\}widetilde\{\textbackslash\{\}mathcal\{L\}\}\_\{p\} = (1 - m) \textbackslash\{\}ast \textbackslash\{\}mathcal\{L\}\_\{p\}\$\$
+
+Rồi giải thích bằng lời trước khi giải thích bằng ký hiệu:
+
+> "\$m\$ là một cái công tắc nhị phân cho \textbf{từng bộ ba một}. Bật lên thì mất mát > của bộ ba đó bằng không --- nó biến mất khỏi gradient, như thể không tồn tại > trong batch này."
+
+Nhấn chỗ khác biệt với cost-sensitive learning:
+
+> "Đánh trọng số lại là \emph{giảm tiếng nói} của lớp head. Che là \textbf{tắt hẳn}. Nghe > thô, nhưng chính vì thô mà không phải dò tham số trọng số."
+
+Chỉ vào hình bên phải: hai thanh xám gạch đứt là head bị che, hai thanh đỏ là tail còn nguyên.
+
+\subsection{Slide 10 --- Hàm mục tiêu (3 phút)}
+Đừng đọc từng số hạng. Chỉ nói hai ý:
+
+\begin{enumerate}\itemsep2pt
+\item VidSGG có hai số hạng: vật thể và vị ngữ. \textbf{Chỉ vị ngữ bị che.}
+\item SGA có năm số hạng. \textbf{Hai chỗ bị che}: vị ngữ ở khung đã quan sát và vị ngữ
+\end{enumerate}
+ở khung dự đoán. Hộp bao và tái tạo giữ nguyên.
+
+> "Vì sao chỉ che nhánh vị ngữ? Vì chỉ nhánh đó mới bị đuôi dài. Phân bố lớp vật > thể cân bằng hơn nhiều."
+
+\subsection{Slide 11 --- Curriculum (3 phút)}
+Ba thành phần: xếp hạng theo lượng dữ liệu, đo thành thục bằng recall, trộn dần theo epoch. Tỉ lệ che \$\textbackslash\{\}mathcal\{R\}\_m = e \textbackslash\{\}times \textbackslash\{\}mathcal\{R\}\_s\$ tăng dần.
+
+Chỉ vào ba biểu đồ bên phải: phân phối nhãn còn lại dịch từ đuôi dài sang đều.
+
+\textbf{Gieo mầm cho slide 17} --- đừng nói hết ngay:
+
+> "Ghi nhớ slide này. Lát nữa ta sẽ quay lại xem nó có thực sự được dùng không."
+
+\subsection{Slide 12 --- Một bộ ba đi xuyên mô hình (3 phút)}
+Đi từng bước với một bộ ba cụ thể:
+
+\begin{enumerate}\itemsep2pt
+\item Khung \$I\textasciicircum{}\{12\}\$ có người và cốc
+\item ORPU cho đặc trưng, hộp bao, phân phối lớp
+\item STPU cho biểu diễn quan hệ \$z\_\{ij\}\textasciicircum{}\{12\}\$
+\item Decoder cho phân phối vị ngữ
+\item Nhãn thật là \textbf{looking\_at} $\rightarrow$ thuộc head $\rightarrow$ \$m = 1\$ $\rightarrow$ \textbf{mất mát bằng 0}
+\end{enumerate}
+> "Bộ ba này vừa đi hết mô hình rồi \textbf{không đóng góp gì cho việc học}. Nếu nhãn > là \emph{drinking\_from} thì ngược lại --- gradient chảy qua bình thường."
+
+\section{Phần 5 --- Đóng góp thứ ba (6 phút)}
+\subsection{Slide 13 --- Robust VidSGG và Robust SGA (6 phút)}
+Giải thích thiết kế: \textbf{huấn luyện trên dữ liệu sạch, đánh giá trên dữ liệu nhiễu}. Không phải huấn luyện tăng cường.
+
+> "Đây mô phỏng đúng tình huống triển khai thật: mô hình được huấn luyện trong > phòng, rồi đem ra chỗ có sương mù, chói nắng, camera nhiễu."
+
+16 kiểu nhiễu, ba mức. Nhóm lại cho dễ nhớ: nhiễu cảm biến, thời tiết, ánh sáng.
+
+Nhấn: \textbf{đây là hai tác vụ mới bài báo đặt ra}, không phải chỉ là thí nghiệm phụ.
+
+\section{Phần 6 --- Thực nghiệm (8 phút)}
+\subsection{Slide 14 --- Thiết lập (2 phút)}
+Nói cách đọc bảng trước khi chiếu bảng:
+
+> "Mỗi dòng là một mô hình nền, dòng ngay dưới là \textbf{chính mô hình đó} sau khi > gắn ImparTail. So theo cặp, đừng so chéo giữa các mô hình."
+
+Ba chế độ VidSGG khác nhau ở lượng thông tin cho sẵn: SGDET chỉ có khung hình, SGCLS thêm hộp bao, PREDCLS thêm cả nhãn vật thể.
+
+\subsection{Slide 15 --- Kết quả VidSGG (3 phút)}
+Đừng đọc số. Chỉ vào các ô xanh:
+
+> "Cải thiện ở \textbf{mọi ô}, không có ngoại lệ. Mức tăng mR@10 khoảng 12\% cho > SGDET, 22\% cho SGCLS, trên 20\% cho PREDCLS."
+
+Nếu có người hỏi vì sao PREDCLS tăng nhiều nhất: vì cho sẵn nhãn vật thể nên phần khó còn lại đúng là phân loại vị ngữ --- chính chỗ ImparTail tác động.
+
+\subsection{Slide 16 --- SGA và độ bền (3 phút)}
+Bảng SGA: khoảng 12\% cho STTran++/DSGDetr++, 20\% cho SceneSayer.
+
+Biểu đồ độ bền là chỗ đáng dừng:
+
+> "Cả hai đều tụt khi gặp nhiễu --- đó là bình thường. Điều đáng nói là mô hình > ImparTail \textbf{tụt ít hơn}: 8,0 điểm so với 14,3. Và điểm sau khi nhiễu của nó > vẫn \textbf{cao hơn điểm sạch} của mô hình nền."
+
+Giải thích cơ chế theo bài báo: cân bằng phân phối làm mô hình không quá khớp vào mẫu hình phổ biến, nên nhiễu ít phá hơn --- giống tác dụng của dropout.
+
+\section{Phần 7 --- Đọc phản biện (8 phút)}
+\subsection{Slide 17 --- Curriculum không được dùng để lấy số (4 phút)}
+Đây là điểm nhấn của cả bài nói. Dựng lên từ từ.
+
+Nhắc lại slide 11, rồi chiếu nguyên văn Remark trang 7. Đọc to đoạn \emph{"we opted for a fixed Masking Ratio of 0.9"}.
+
+Rồi đưa ba tầng bằng chứng:
+
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Nguồn} & \textbf{Bằng chứng}\\
+\midrule
+Bài báo & Remark trang 7 nói rõ dùng tỉ lệ cố định\\
+Mã nguồn & \code{train\_sgg\_methods.py:402} $\rightarrow$ \code{is\_curriculum = False} là mặc định\\
+Script chạy & \code{METHODS=("sttran" "dsgdetr")} --- không script nào gọi curriculum\\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Phát biểu cẩn thận} --- đây là chỗ dễ nói quá:
+
+> "Tôi chỉ đang mô tả \textbf{bài báo và mã đã công bố}. Không kết luận tác giả có > chạy curriculum hay không trong quá trình nghiên cứu --- rất có thể họ có chạy > mà chỉ không đưa vào bản phát hành."
+
+Câu hỏi để lại:
+
+> "Nếu tỉ lệ cố định cho kết quả tương đương curriculum, thì đóng góp thật nằm ở > curriculum hay chỉ ở việc che mất mát? Bài báo chưa tách được hai thứ đó."
+
+\subsection{Slide 18 --- Quan sát khác khi đọc mã (2 phút)}
+Lướt nhanh: đường dẫn cứng của bốn máy, không cố định seed, rào cản chạy lại.
+
+Nói rõ vì sao nhóm không chạy lại được --- và \textbf{không đổ cho mã hỏng}:
+
+> "Không phải mã sai. Là chi phí dữ liệu: hàng chục GB video Charades, bước tách > khung hình, và \code{torch 1.10.1+cu111} --- bản năm 2021 mà GPU hiện đại không còn > hỗ trợ."
+
+Ghi nhận điểm cộng: giấy phép Apache 2.0 rõ ràng, có phát hành checkpoint --- khá hơn nhiều repo cùng lĩnh vực.
+
+\subsection{Slide 19 --- Mạnh yếu (2 phút)}
+Đọc lướt hai cột. Dừng ở dòng "tỉ lệ che 0,9":
+
+> "Che 90\% nhãn mà vẫn học được --- con số này tự nó đã đáng ngạc nhiên. Bài báo > không khảo sát vì sao lại là 0,9."
+
+\section{Phần 8 --- Kết (3 phút)}
+\subsection{Slide 20 --- Ba điều mang về}
+Nói chậm, mỗi ý một câu:
+
+\begin{enumerate}\itemsep2pt
+\item \textbf{Đổi mục tiêu, đừng đổi kiến trúc.} Một phép nhân với mặt nạ nhị phân, không
+\end{enumerate}
+thêm tham số nào, cải thiện 12--22\%.
+
+\begin{enumerate}\itemsep2pt
+\item \textbf{Chỉ số quyết định điều mình nhìn thấy.} Recall giấu điểm yếu ở đuôi, mean
+\end{enumerate}
+Recall phơi ra.
+
+\begin{enumerate}\itemsep2pt
+\item \textbf{Đọc bài báo cùng với mã.} Phát hiện về curriculum chỉ hiện ra khi đọc cả
+\end{enumerate}
+hai; đọc riêng cái nào cũng không thấy.
+
+\section{Câu hỏi có thể bị hỏi}
+\textbf{1. Che 90\% nhãn thì còn gì để học?}
+
+Che theo \textbf{bộ ba}, không theo mẫu. Một khung hình có nhiều cặp vật thể; che hết các cặp head vẫn còn các cặp tail. Và mất mát vật thể không bị che.
+
+\textbf{2. Khác gì focal loss?}
+
+Focal loss giảm trọng số mẫu dễ theo \textbf{độ tin cậy dự đoán}, liên tục và tự động. ImparTail che theo \textbf{lớp}, nhị phân, và theo lịch trình định trước. Bài báo không so trực tiếp với focal loss --- đó là một thiếu sót.
+
+\textbf{3. Vì sao không huấn luyện tăng cường với nhiễu cho robust?}
+
+Vì tác vụ họ đặt ra cố tình mô phỏng triển khai thật: không biết trước sẽ gặp nhiễu gì. Huấn luyện tăng cường sẽ trả lời một câu hỏi khác.
+
+\textbf{4. Cải thiện có nằm trong nhiễu ngẫu nhiên không?}
+
+\textbf{Không kiểm chứng được} --- bài báo không báo cáo độ lệch chuẩn, không nói chạy
+
+mấy seed. Với mức tăng 12--22\% thì khả năng là thật, nhưng đúng ra phải có nhiều seed.
+
+\textbf{5. Nhóm có chạy lại không?}
+
+Không, và lý do là chi phí dữ liệu chứ không phải mã hỏng --- xem slide 18. Nhóm có chạy lại đầy đủ bài APKGC trong phần báo cáo.
+
+\textbf{6. ImparTail có gắn được lên mô hình mới hơn không?}
+
+Về nguyên tắc có, miễn mô hình đó dùng pipeline biểu diễn hướng-đối-tượng và có một số hạng mất mát phân loại vị ngữ tách rời. Bài báo đã chứng minh trên sáu mô hình nền.
+
+\textbf{7. Vì sao chọn Action Genome?}
+
+Đây là bộ chuẩn de-facto cho VidSGG và SGA, chú giải trên video Charades. Nhưng \textbf{chỉ một bộ dữ liệu} cũng là điểm yếu --- không biết kết quả có chuyển sang bộ khác không.
+
+\end{document}

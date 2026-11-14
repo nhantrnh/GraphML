@@ -1,0 +1,52 @@
+% Cover page of the GraphML (HP3) final report, compiled separately and included by 25C15053.tex.
+% Build: xelatex cover.tex
+\documentclass[a4paper,12pt]{article}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\usepackage[margin=1.6cm]{geometry}
+\usepackage{graphicx,xcolor,tikz,array}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+\definecolor{hcmus}{HTML}{1F4E8C}
+\pagestyle{empty}
+\begin{document}
+% double frame around the page, as on the university's report covers
+\begin{tikzpicture}[remember picture, overlay]
+\draw[hcmus, line width=2.2pt] ([shift={(1.25cm,1.25cm)}]current page.south west) rectangle ([shift={(-1.25cm,-1.25cm)}]current page.north east);
+\draw[hcmus, line width=0.6pt] ([shift={(1.45cm,1.45cm)}]current page.south west) rectangle ([shift={(-1.45cm,-1.45cm)}]current page.north east);
+\end{tikzpicture}
+\begin{center}
+\vspace*{0.4cm}
+{\large\bfseries VIETNAM NATIONAL UNIVERSITY HO CHI MINH CITY\par}
+\vspace{2pt}
+{\large\bfseries UNIVERSITY OF SCIENCE\par}
+\vspace{2pt}
+{\large FACULTY OF INFORMATION TECHNOLOGY\par}
+\vspace{4pt}
+{\color{hcmus}\rule{0.32\textwidth}{0.8pt}\par}
+\vspace{1.1cm}
+\includegraphics[width=4.6cm]{figures/logo_khtn.png}\par
+\vspace{1.3cm}
+{\Large\bfseries\color{hcmus} FINAL REPORT\par}
+\vspace{4pt}
+\vspace{1.0cm}
+{\LARGE\bfseries APKGC and ImparTail\par}
+\vspace{0.8cm}
+\begin{minipage}{0.84\textwidth}
+\centering\normalsize
+\textbf{Part I (seminar paper).} \emph{APKGC: Noise-enhanced Multi-Modal Knowledge Graph
+Completion with Attention Penalty}, AAAI 2025.\\[6pt]
+\textbf{Part II (report paper).} \emph{Towards Unbiased and Robust Spatio-Temporal Scene
+Graph Generation and Anticipation} (ImparTail), CVPR 2025.
+\end{minipage}
+\par\vspace{1.6cm}
+{\large
+\begin{tabular}{>{\bfseries}r@{\hspace{10pt}}l}
+Student & Trương Thành Nhân\\[3pt]
+Student ID & 25C15053\\
+\end{tabular}\par}
+\vfill
+{\large Ho Chi Minh City, November 2026\par}
+\vspace*{0.3cm}
+\end{center}
+\end{document}

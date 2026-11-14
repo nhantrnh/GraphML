@@ -1,0 +1,845 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\usepackage{fontspec}
+\usetheme{Antibes}
+\setbeamertemplate{navigation symbols}{}
+
+% Page number bottom-right
+\setbeamertemplate{footline}{
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.5ex,dp=1.2ex,right]{author in head/foot}%
+      \usebeamerfont{author in head/foot}
+      \insertframenumber{} / \inserttotalframenumber
+      \hspace*{2ex}
+    \end{beamercolorbox}%
+  }%
+}
+
+% Custom headline: project name + section
+\newcommand{\projectname}{ImparTail --- Unbiased \& Robust STSG (CVPR 2025)}
+\setbeamertemplate{headline}{
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.5ex,dp=1.125ex,left]{section in head/foot}%
+      \usebeamerfont{section in head/foot}\hspace*{2ex}\projectname%
+    \end{beamercolorbox}}%
+  \vskip0pt%
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.5ex,dp=1.125ex,left]{subsection in head/foot}%
+      \usebeamerfont{subsection in head/foot}\hspace*{2ex}\insertsectionhead%
+    \end{beamercolorbox}}%
+  \vskip0pt%
+}
+
+% =====================
+% Packages
+% =====================
+\usepackage{amsmath,amsfonts,amssymb}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing,positioning,arrows.meta}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric,backgrounds}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{xcolor}
+
+% =====================
+% Colors
+% =====================
+\definecolor{hcmusblue}{HTML}{1B3A5C}
+\definecolor{contextblue}{HTML}{2E86C1}
+\definecolor{methodteal}{HTML}{16A085}
+\definecolor{objectivepurple}{HTML}{7D3C98}
+\definecolor{riskred}{HTML}{C0392B}
+\definecolor{lightbg}{HTML}{F5F8FC}
+
+\definecolor{GoodGreen}{HTML}{1A6B3C}
+\definecolor{GoodBg}{HTML}{D5EDE0}
+\definecolor{BadRed}{HTML}{A82A1E}
+\definecolor{BadBg}{HTML}{FAE1DE}
+\definecolor{BlueBg}{HTML}{DBE9F8}
+\definecolor{MutedTxt}{HTML}{555555}
+\definecolor{OrangeAc}{HTML}{C05A00}
+
+% Mã màu ba mô thái, dùng nhất quán toàn bài
+\definecolor{structblue}{HTML}{4A7DC0}
+\definecolor{visorange}{HTML}{C05A00}
+\definecolor{textgreen}{HTML}{1A6B3C}
+
+\setbeamercolor{structure}{fg=hcmusblue}
+\setbeamercolor{block title}{fg=white,bg=contextblue}
+\setbeamercolor{block body}{bg=contextblue!7}
+\setbeamercolor{alerted text}{fg=riskred}
+
+% =====================
+% Semantic block environments
+% =====================
+\newenvironment{contextblock}[1]{%
+  \setbeamercolor{block title}{fg=white,bg=contextblue}%
+  \setbeamercolor{block body}{bg=contextblue!7}%
+  \begin{block}{#1}}{\end{block}}
+
+\newenvironment{methodblock}[1]{%
+  \setbeamercolor{block title}{fg=white,bg=methodteal}%
+  \setbeamercolor{block body}{bg=methodteal!7}%
+  \begin{block}{#1}}{\end{block}}
+
+\newenvironment{objectiveblock}[1]{%
+  \setbeamercolor{block title}{fg=white,bg=objectivepurple}%
+  \setbeamercolor{block body}{bg=objectivepurple!7}%
+  \begin{block}{#1}}{\end{block}}
+
+\newenvironment{riskblock}[1]{%
+  \setbeamercolor{block title}{fg=white,bg=riskred}%
+  \setbeamercolor{block body}{bg=riskred!7}%
+  \begin{block}{#1}}{\end{block}}
+
+% =====================
+% Helper commands
+% =====================
+\newcommand{\emphkey}[1]{\textcolor{contextblue}{\textbf{#1}}}
+\newcommand{\emphwarn}[1]{\textcolor{riskred}{\textbf{#1}}}
+\newcommand{\emphok}[1]{\textcolor{methodteal}{\textbf{#1}}}
+\newcommand{\emphobj}[1]{\textcolor{objectivepurple}{\textbf{#1}}}
+\newcommand{\muted}[1]{\textcolor{MutedTxt}{#1}}
+
+\newcommand{\es}{e_{\mathrm{s}}}
+\newcommand{\ev}{e_{\mathrm{v}}}
+\newcommand{\et}{e_{\mathrm{t}}}
+
+% =====================
+% Title
+% =====================
+\title[ImparTail]{Towards Unbiased and Robust Spatio-Temporal\\Scene Graph Generation and Anticipation}
+\subtitle{Peddi, Saurabh, Shrivastava, Singla, Gogate --- CVPR 2025 (Highlight)}
+\subtitle{Seminar GraphML --- Học phần HP3}
+\author{Nhóm seminar}
+\institute{ĐHQG-HCM --- Trường Đại học Khoa học Tự nhiên\\Khoa Công nghệ Thông tin}
+\date{\today}
+\setbeamerfont{title}{series=\bfseries}
+\setbeamerfont{frametitle}{size=\normalsize,series=\bfseries}
+\setbeamerfont{block title}{size=\footnotesize,series=\bfseries}
+\setbeamerfont{block body}{size=\footnotesize}
+\setlength{\medskipamount}{3pt}
+\setlength{\bigskipamount}{6pt}
+
+% Section dividers
+\AtBeginSection[]{
+  \begin{frame}
+    \vfill\centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionhead\par
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+
+\begin{frame}{Nội dung}
+  \tableofcontents
+\end{frame}
+
+\section{Bối cảnh}
+
+\begin{frame}{Scene graph: từ ảnh tĩnh sang video}
+\begin{columns}[T]
+\begin{column}{0.47\textwidth}
+  \begin{contextblock}{Scene graph tĩnh}
+    Ảnh $\to$ đồ thị. \emphkey{Đỉnh} là vật thể, \emphkey{cạnh} là quan hệ.
+    \\[4pt]
+    {\scriptsize Bắt nguồn từ Visual Genome (2016).}
+  \end{contextblock}
+  \vspace{4pt}
+  \begin{methodblock}{Spatio-Temporal Scene Graph}
+    Video $\to$ \emphok{một đồ thị cho mỗi khung hình}, và quan hệ \emphok{biến
+    đổi theo thời gian}.
+    \\[4pt]
+    {\scriptsize Action Genome (2019) chú giải Charades theo cách này.}
+  \end{methodblock}
+\end{column}
+\begin{column}{0.5\textwidth}
+  \centering
+  \begin{tikzpicture}[scale=0.82, every node/.style={font=\scriptsize}]
+    \foreach \x/\lbl in {0/$t{=}1$, 2.6/$t{=}2$, 5.2/$t{=}3$} {
+      \draw[rounded corners=2pt, fill=lightbg, draw=hcmusblue!40]
+            (\x,0) rectangle (\x+2.2,1.5);
+      \node[below] at (\x+1.1,0) {\lbl};
+    }
+    \foreach \x/\n in {0/A, 2.6/B, 5.2/C} {
+      \node[circle,draw=contextblue,fill=contextblue!12,inner sep=1.6pt] (p\n) at (\x+0.55,1.05) {ng};
+      \node[circle,draw=methodteal,fill=methodteal!12,inner sep=1.6pt] (c\n) at (\x+1.65,0.45) {cốc};
+    }
+    \draw[->,contextblue,thick] (pA) -- node[above,sloped,font=\tiny]{nhìn} (cA);
+    \draw[->,methodteal,thick]  (pB) -- node[above,sloped,font=\tiny]{chạm} (cB);
+    \draw[->,riskred,thick]     (pC) -- node[above,sloped,font=\tiny]{uống} (cC);
+    \draw[->,dashed,gray] (2.2,0.75) -- (2.6,0.75);
+    \draw[->,dashed,gray] (4.8,0.75) -- (5.2,0.75);
+  \end{tikzpicture}
+  \vspace{6pt}
+  \muted{\scriptsize Cùng một cặp \emph{(người, cốc)}, quan hệ đổi theo thời gian.
+  Đó là thứ scene graph tĩnh không diễn tả được.}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Ký hiệu --- đủ dùng cho cả bài}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+{\small
+Đoạn video $V_1^T = \{I^1, I^2, \ldots, I^T\}$, $T$ khung hình.
+\\[5pt]
+Trong khung $I^t$:
+\begin{itemize}\itemsep2pt
+  \item Vật thể $O^t = \{o_1^t, \ldots, o_{N(t)}^t\}$
+  \item Mỗi $o_k^t$ có hộp bao $\mathbf{b}_k^t \in [0,1]^4$ và nhãn lớp
+        $\mathbf{c}_k^t \in \mathcal{C}$
+  \item Vị ngữ $p_{ijk}^t \in \mathcal{P}$ cho cặp $(o_i^t, o_j^t)$
+\end{itemize}
+\vspace{5pt}
+\emphkey{Bộ ba quan hệ:}
+\[ r_{ijk}^t = (o_i^t,\; p_{ijk}^t,\; o_j^t) \]
+\emphkey{Scene graph khung $t$:} $\mathcal{G}^t = \{r_{ijk}^t\}_{i,j,k}$
+}
+\end{column}
+\begin{column}{0.45\textwidth}
+  \begin{objectiveblock}{Hai tác vụ}
+    {\small
+    \textbf{VidSGG} --- sinh $\{\mathcal{G}^t\}_{t=1}^{T}$ cho khung
+    \emphobj{đã quan sát}.
+    \\[5pt]
+    \textbf{SGA} --- sinh $\{\mathcal{G}^t\}_{t=T+1}^{T+H}$ cho khung
+    \emphwarn{chưa quan sát}.
+    \\[3pt]
+    $H$ là \emph{tầm dự đoán} (anticipation horizon).}
+  \end{objectiveblock}
+  \vspace{3pt}
+  \muted{\scriptsize SGA khó hơn: phải đoán quan hệ ở khung chưa nhìn thấy, dựa
+  trên diễn tiến của các khung trước.}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Ví dụ đầu vào --- một đoạn clip đi xuyên hai tác vụ}
+\centering
+\begin{tikzpicture}[scale=0.9, every node/.style={font=\scriptsize}]
+  \fill[lightbg,rounded corners=3pt,draw=contextblue!50] (-0.2,-0.2) rectangle (5.6,2.6);
+  \node[contextblue,font=\scriptsize\bfseries] at (2.7,2.35) {ĐÃ QUAN SÁT $V_1^T$};
+  \foreach \x/\t in {0.2/9.0, 2.9/22.3} {
+    \draw[rounded corners=2pt,fill=white,draw=gray!50] (\x,0.5) rectangle (\x+2.2,1.9);
+    \node at (\x+1.1,1.2) {\tiny khung $t{=}\t$ s};
+    \node[below] at (\x+1.1,0.5) {\tiny\color{contextblue} sinh $\mathcal{G}^t$};
+  }
+  \fill[riskred!6,rounded corners=3pt,draw=riskred!50] (6.4,-0.2) rectangle (12.2,2.6);
+  \node[riskred,font=\scriptsize\bfseries] at (9.3,2.35) {CHƯA QUAN SÁT $V_{T+1}^{T+H}$};
+  \foreach \x/\t in {6.8/38.4, 9.5/56.6} {
+    \draw[rounded corners=2pt,fill=white,draw=gray!50,dashed] (\x,0.5) rectangle (\x+2.2,1.9);
+    \node at (\x+1.1,1.2) {\tiny khung $t{=}\t$ s};
+    \node[below] at (\x+1.1,0.5) {\tiny\color{riskred} dự đoán $\mathcal{G}^t$};
+  }
+  \draw[->,very thick,objectivepurple] (5.7,1.2) -- node[above,font=\tiny]{SGA} (6.3,1.2);
+\end{tikzpicture}
+\vspace{8pt}
+{\small
+\begin{tabular}{@{}l l@{}}
+  \toprule
+  \textbf{VidSGG} nhận ra ở khung đã thấy &
+    \emphkey{(người, \textsf{looking\_at}, sổ tay)} \\
+  & \emphkey{(người, \textsf{not\_looking\_at}, sổ tay)} \\
+  \midrule
+  \textbf{SGA} dự đoán diễn tiến sang &
+    \emphwarn{(người, \textsf{touching}, cốc)} \\
+  & \emphwarn{(người, \textsf{drinking\_from}, cốc)} \\
+  \bottomrule
+\end{tabular}}
+\vspace{6pt}
+\muted{\scriptsize Ví dụ lấy từ Hình 2 của bài báo. Chú ý: cùng cặp vật thể,
+quan hệ chuyển dần --- đó chính là tín hiệu mà SGA phải học.}
+\end{frame}
+
+\section{Vấn đề: phân phối đuôi dài}
+
+\begin{frame}{Vấn đề --- vị ngữ phân phối đuôi dài}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+  \centering
+  \begin{tikzpicture}[scale=0.88]
+    \draw[->] (0,0) -- (5.6,0) node[right,font=\tiny]{lớp vị ngữ};
+    \draw[->] (0,0) -- (0,2.7) node[above,font=\tiny]{tần suất};
+    \foreach \x/\h/\c in {0.3/2.4/contextblue, 0.75/1.9/contextblue,
+                          1.2/1.35/contextblue, 1.65/0.95/contextblue,
+                          2.1/0.62/riskred, 2.55/0.44/riskred, 3.0/0.32/riskred,
+                          3.45/0.24/riskred, 3.9/0.18/riskred, 4.35/0.13/riskred,
+                          4.8/0.09/riskred, 5.25/0.06/riskred}
+      \fill[\c!75] (\x,0) rectangle (\x+0.33,\h);
+    \node[contextblue,font=\tiny\bfseries] at (1.1,2.6) {HEAD};
+    \node[riskred,font=\tiny\bfseries] at (3.9,1.1) {TAIL};
+    \draw[decorate,decoration={brace,amplitude=3pt},riskred]
+          (2.05,0.75) -- (5.6,0.75);
+  \end{tikzpicture}
+  \vspace{4pt}
+  \muted{\scriptsize Phân phối vị ngữ của Action Genome (Hình 2a).}
+\end{column}
+\begin{column}{0.47\textwidth}
+  \begin{riskblock}{Hệ quả khi huấn luyện thường}
+    {\small Mất mát bị \emphwarn{lớp head lấn át}. Mô hình học rất tốt
+    \textsf{in\_front\_of}, \textsf{looking\_at} --- và gần như bỏ qua
+    \textsf{drinking\_from}, \textsf{wiping}.}
+  \end{riskblock}
+  \vspace{3pt}
+  \begin{contextblock}{Vì sao đó là vấn đề thật}
+    {\small Lớp \emphkey{tail mới là lớp mang thông tin}. Biết
+    ``người ở trước cái cốc'' gần như vô dụng; biết ``người đang uống từ cái
+    cốc'' mới là hiểu cảnh.}
+  \end{contextblock}
+  \vspace{3pt}
+  \muted{\scriptsize Đây là lý do bài báo dùng \textbf{mean Recall@K} chứ không
+  chỉ Recall@K --- mR đối xử mọi lớp như nhau nên không giấu được điểm yếu ở
+  đuôi.}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Các hướng đã có, và ImparTail đứng ở đâu}
+{\small
+\begin{tabular}{@{}p{0.29\textwidth} p{0.34\textwidth} p{0.30\textwidth}@{}}
+  \toprule
+  \textbf{Hướng} & \textbf{Cách làm} & \textbf{Điểm yếu} \\
+  \midrule
+  Cost-sensitive learning & Đánh trọng số lại hàm mất mát theo tần suất lớp &
+    Nhạy với cách chọn trọng số \\
+  Resampling & Lấy mẫu lại dữ liệu cho cân bằng &
+    Lặp mẫu hiếm $\to$ quá khớp \\
+  Mixture-of-Experts & Nhiều nhánh chuyên biệt &
+    \emphwarn{Thêm tham số, thêm kiến trúc} \\
+  Kiến trúc chuyên dụng \newline {\scriptsize (TEMPURA, FloCoDe)} &
+    Thêm mô-đun bộ nhớ, mô hình bất định &
+    \emphwarn{Gắn chặt với một mô hình cụ thể} \\
+  \midrule
+  \rowcolor{GoodBg}
+  \textbf{ImparTail} & \textbf{Chỉ đổi \emph{mục tiêu huấn luyện}} ---
+    che mất mát của lớp head &
+    \textbf{Không thêm tham số nào} \\
+  \bottomrule
+\end{tabular}}
+\vspace{8pt}
+\begin{methodblock}{Luận điểm bán hàng của bài báo}
+  Vì ImparTail không đụng vào kiến trúc, nó \emphok{gắn được lên bất kỳ phương
+  pháp VidSGG/SGA nào} dùng pipeline biểu diễn hướng-đối-tượng --- và bài báo
+  chứng minh bằng cách gắn lên \textbf{sáu} mô hình nền khác nhau.
+\end{methodblock}
+\end{frame}
+
+\section{Phương pháp}
+
+\begin{frame}{Toàn cảnh pipeline --- ba khối, ImparTail chỉ đụng khối cuối}
+\centering
+\begin{tikzpicture}[scale=0.92, every node/.style={font=\scriptsize},
+    box/.style={rounded corners=3pt, draw, minimum height=1.05cm,
+                minimum width=2.25cm, align=center}]
+  \node[box, draw=gray!60, fill=gray!8]            (f)  at (0,0)    {khung hình\\$I^1 \ldots I^T$};
+  \node[box, draw=contextblue, fill=contextblue!10] (o) at (2.75,0) {\textbf{ORPU}\\biểu diễn\\vật thể};
+  \node[box, draw=contextblue, fill=contextblue!10] (s) at (5.5,0)  {\textbf{STPU}\\ngữ cảnh\\không-thời gian};
+  \node[box, draw=methodteal, fill=methodteal!12]   (d) at (8.25,0) {\textbf{Decoders}\\dự đoán\\vị ngữ};
+  \node[box, draw=riskred, fill=riskred!10]         (l) at (11.0,0) {\textbf{Masked}\\\textbf{Loss}};
+  \foreach \a/\b in {f/o, o/s, s/d, d/l} \draw[->,thick,gray!70] (\a) -- (\b);
+  \draw[decorate,decoration={brace,amplitude=4pt},contextblue]
+        (1.5,0.75) -- (9.4,0.75)
+        node[midway,above=4pt,contextblue,font=\scriptsize\bfseries]
+        {lấy nguyên từ mô hình nền (STTran, DSGDetr, SceneSayer\ldots)};
+  \draw[decorate,decoration={brace,amplitude=4pt,mirror},riskred]
+        (9.8,-0.75) -- (12.2,-0.75)
+        node[midway,below=4pt,riskred,font=\scriptsize\bfseries]
+        {phần duy nhất ImparTail thay};
+\end{tikzpicture}
+\vspace{10pt}
+{\small
+\begin{tabular}{@{}l l@{}}
+  \toprule
+  \textbf{ORPU} & Trích đặc trưng thị giác $\mathbf{v}_i^t$, hộp bao $\mathbf{b}_i^t$,
+                  phân phối lớp $\hat{\mathbf{c}}_i^t$ từ bộ phát hiện vật thể \\
+  \textbf{STPU} & Encoder không gian rồi encoder thời gian $\to$ biểu diễn quan hệ
+                  $\mathbf{z}_{ij}^t$ \\
+  \textbf{Decoders} & MLP hai tầng: $\hat{\mathbf{p}}_{ij}^t
+                      = \mathrm{PredClassifier}(\mathbf{z}_{ij}^t)$ \\
+  \bottomrule
+\end{tabular}}
+\vspace{6pt}
+\muted{\scriptsize Với SGA có thêm LDPU sinh biểu diễn cho khung tương lai, và
+\emph{hai} bộ decoder: một cho quan hệ đã quan sát, một cho quan hệ dự đoán.}
+\end{frame}
+
+\begin{frame}{Đóng góp 1 --- Masked Loss}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+  \begin{methodblock}{Ý tưởng}
+    {\small Đừng \emph{đánh trọng số lại} mẫu. Hãy \emphok{xoá hẳn} đóng góp
+    mất mát của những vị ngữ thuộc lớp head.}
+  \end{methodblock}
+  \vspace{4pt}
+  {\small
+  Mặt nạ $\mathbf{m}_{ijk}^t \in \{0,1\}$ cho từng bộ ba:
+  \[
+    \widetilde{\mathcal{L}}_{p_{ijk}^t} = (1 - \mathbf{m}_{ijk}^t) \ast \mathcal{L}_{p_{ijk}^t}
+    = \begin{cases}
+        \mathcal{L}_{p_{ijk}^t} & \text{nếu } \mathbf{m}_{ijk}^t = 0\\[2pt]
+        0 & \text{nếu } \mathbf{m}_{ijk}^t = 1
+      \end{cases}
+  \]
+  \vspace{2pt}
+  Đặt $\mathbf{m}=1$ là \emphwarn{bộ ba đó biến mất khỏi gradient}.}
+\end{column}
+\begin{column}{0.45\textwidth}
+  \centering
+  \begin{tikzpicture}[scale=0.85, every node/.style={font=\tiny}]
+    \node[font=\scriptsize\bfseries,contextblue] at (1.6,3.0) {Huấn luyện thường};
+    \foreach \y/\lbl/\c in {2.5/in\_front\_of/contextblue, 2.05/looking\_at/contextblue,
+                            1.6/touching/riskred, 1.15/drinking\_from/riskred} {
+      \fill[\c!70] (0,\y) rectangle (1.1,\y+0.3);
+      \node[right,font=\tiny] at (1.2,\y+0.15) {\lbl};
+    }
+    \node[font=\scriptsize\bfseries,riskred] at (1.6,0.6) {Masked Training};
+    \foreach \y/\lbl in {0.1/in\_front\_of, -0.35/looking\_at} {
+      \draw[gray!50,dashed] (0,\y) rectangle (1.1,\y+0.3);
+      \node[right,font=\tiny,gray] at (1.2,\y+0.15) {\lbl\ \textbf{(che)}};
+    }
+    \foreach \y/\lbl in {-0.8/touching, -1.25/drinking\_from} {
+      \fill[riskred!70] (0,\y) rectangle (1.1,\y+0.3);
+      \node[right,font=\tiny] at (1.2,\y+0.15) {\lbl};
+    }
+  \end{tikzpicture}
+  \vspace{3pt}
+  \muted{\scriptsize Head bị che $\to$ gradient chỉ còn đến từ tail.}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Hàm mục tiêu --- VidSGG và SGA}
+{\small
+\textbf{VidSGG} --- mất mát phân loại vật thể cộng mất mát vị ngữ \emph{đã che}:
+\[
+  \mathcal{L} = \sum_{t=1}^{\bar T}
+     \Bigl( \lambda_1 \underbrace{\widetilde{\mathcal{L}}^t}_{\text{vị ngữ, đã che}}
+          + \lambda_2 \sum_i \underbrace{\mathcal{L}_i^t}_{\text{vật thể}} \Bigr)
+  \qquad\text{(Eq.\ 6)}
+\]
+\vspace{-4pt}
+
+\textbf{SGA} --- thêm nhánh dự đoán, tổng cộng năm số hạng:
+\[
+  \mathcal{L} = \sum_{t=1}^{T}\bigl(\lambda_1 \widetilde{\mathcal{L}}_{\mathrm{gen}}^t
+     + \lambda_2 {\textstyle\sum_i} \mathcal{L}_i^t\bigr)
+   + \sum_{T=3}^{T-1}\bigl(\lambda_3 \widetilde{\mathcal{L}}_{\mathrm{ant}}^{(1:T)}
+     + \lambda_4 \mathcal{L}_{\mathrm{boxes}}^{(1:T)}
+     + \lambda_5 \mathcal{L}_{\mathrm{recon}}^{(1:T)}\bigr)
+  \quad\text{(Eq.\ 7)}
+\]}
+\vspace{2pt}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+  \begin{contextblock}{Hai chỗ được che}
+    {\small $\widetilde{\mathcal{L}}_{\mathrm{gen}}$ --- vị ngữ ở khung \emph{đã quan sát}
+    \\
+    $\widetilde{\mathcal{L}}_{\mathrm{ant}}$ --- vị ngữ ở khung \emph{dự đoán}}
+  \end{contextblock}
+\end{column}
+\begin{column}{0.48\textwidth}
+  \begin{riskblock}{Không che}
+    {\small Mất mát vật thể, hồi quy hộp bao, tái tạo --- \emphwarn{giữ nguyên}.
+    Chỉ nhánh vị ngữ mới bị thiên lệch đuôi dài.}
+  \end{riskblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Đóng góp 2 --- sinh mặt nạ theo curriculum}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+{\small
+Ba thành phần mà một curriculum cần:
+\\[4pt]
+\begin{tabular}{@{}p{0.24\textwidth} p{0.68\textwidth}@{}}
+  \toprule
+  \textbf{Xếp hạng} & Lớp càng nhiều dữ liệu càng ``dễ'' \\
+  \textbf{Thành thục} & Đo bằng recall của lớp đó \\
+  \textbf{Trộn dần} & Tỉ lệ che $\mathcal{R}_m = e \times \mathcal{R}_s$
+                      tăng theo epoch $e$ \\
+  \bottomrule
+\end{tabular}
+\vspace{6pt}
+Số nhãn cần giữ lại:
+\[ N_{\text{target}} = \mathrm{round}(N \times \mathcal{R}_m) \]
+\[ Tar[rel] \sim \mathrm{Multinomial}(N_{\text{target}}, Prob[rel]) \]
+với $Prob[rel] = \tfrac{1}{|\mathcal{P}|}$ --- \emphkey{phân phối đều}.}
+\end{column}
+\begin{column}{0.47\textwidth}
+  \centering
+  \begin{tikzpicture}[scale=0.8, every node/.style={font=\tiny}]
+    \foreach \yy/\it in {0/{Iteration 1}, -1.9/{Iteration 3}, -3.8/{Iteration 5}} {
+      \node[font=\tiny\bfseries,anchor=west] at (0,\yy+1.35) {\it};
+      \draw[->,gray] (0,\yy) -- (4.6,\yy);
+      \draw[->,gray] (0,\yy) -- (0,\yy+1.15);
+    }
+    \foreach \x/\h in {0.25/1.05, 0.75/0.82, 1.25/0.58, 1.75/0.4, 2.25/0.27,
+                       2.75/0.19, 3.25/0.13, 3.75/0.09, 4.25/0.06}
+      \fill[contextblue!70] (\x,0) rectangle (\x+0.35,\h);
+    \foreach \x/\h in {0.25/0.72, 0.75/0.62, 1.25/0.52, 1.75/0.42, 2.25/0.34,
+                       2.75/0.28, 3.25/0.23, 3.75/0.19, 4.25/0.16}
+      \fill[objectivepurple!65] (\x,-1.9) rectangle (\x+0.35,-1.9+\h);
+    \foreach \x in {0.25,0.75,1.25,1.75,2.25,2.75,3.25,3.75,4.25}
+      \fill[methodteal!70] (\x,-3.8) rectangle (\x+0.35,-3.8+0.45);
+    \node[right,font=\tiny,methodteal] at (4.7,-3.58) {đều};
+  \end{tikzpicture}
+  \vspace{2pt}
+  \muted{\scriptsize Phân phối nhãn còn lại dịch dần từ đuôi dài sang đều
+  (Hình 3d).}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Một bộ ba đi xuyên toàn bộ mô hình}
+\centering
+{\small
+\begin{tikzpicture}[scale=0.95, every node/.style={font=\scriptsize},
+    st/.style={rounded corners=2pt, draw, fill=lightbg, minimum height=0.72cm,
+               text width=2.5cm, align=center, inner sep=3pt}]
+  \node[st, draw=gray!60]        (a) at (0,0)    {khung $I^{12}$\\{\tiny người + cốc}};
+  \node[st, draw=contextblue]    (b) at (3.1,0)  {ORPU\\{\tiny $\mathbf{v}$, $\mathbf{b}$, $\hat{\mathbf{c}}$}};
+  \node[st, draw=contextblue]    (c) at (6.2,0)  {STPU\\{\tiny $\mathbf{z}_{ij}^{12}$}};
+  \node[st, draw=methodteal]     (d) at (9.3,0)  {Decoder\\{\tiny $\hat{\mathbf{p}}_{ij}^{12}$}};
+  \foreach \x/\y in {a/b, b/c, c/d} \draw[->,thick,gray!70] (\x) -- (\y);
+
+  \node[st, draw=riskred, fill=riskred!8, text width=3.0cm] (m) at (9.3,-1.75)
+       {nhãn thật: \textsf{looking\_at}\\{\tiny thuộc lớp \textbf{head}}};
+  \draw[->,thick,riskred] (m) -- (d);
+  \node[right, text width=5.3cm, font=\scriptsize] at (11.0,-1.75)
+       {$\mathbf{m}=1 \Rightarrow \widetilde{\mathcal{L}}=0$\\
+        \emphwarn{bộ ba này không đóng gradient}};
+\end{tikzpicture}}
+\vspace{8pt}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+  \begin{contextblock}{Nếu nhãn là lớp tail}
+    {\small \textsf{drinking\_from} $\to$ $\mathbf{m}=0$ $\to$ mất mát giữ
+    nguyên $\to$ \emphkey{gradient chảy qua bình thường}.}
+  \end{contextblock}
+\end{column}
+\begin{column}{0.48\textwidth}
+  \begin{methodblock}{Điểm mấu chốt}
+    {\small Forward pass \emphok{không đổi một chút nào}. Chỉ backward đổi.
+    Vì thế mới gắn được lên mọi mô hình nền.}
+  \end{methodblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Đóng góp 3 --- hai tác vụ đánh giá độ bền mới}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+  \begin{objectiveblock}{Robust VidSGG \& Robust SGA}
+    {\small Huấn luyện trên dữ liệu \emph{sạch}, đánh giá trên khung hình
+    \emphobj{đã bị làm nhiễu} --- mô phỏng điều kiện triển khai thật.}
+  \end{objectiveblock}
+  \vspace{4pt}
+  {\small \textbf{16 kiểu nhiễu}, mức độ $\in \{10, 20, 50\}$:}
+  \\[3pt]
+  {\scriptsize
+  \begin{tabular}{@{}l l@{}}
+    \toprule
+    Nhiễu cảm biến & gaussian, shot, impulse, speckle \\
+    Thời tiết & fog, frost, sun glare \\
+    Ánh sáng & brightness \\
+    \bottomrule
+  \end{tabular}}
+  \vspace{5pt}
+  \muted{\scriptsize Bộ nhiễu chuẩn dùng trong nghiên cứu robustness đối kháng.}
+\end{column}
+\begin{column}{0.47\textwidth}
+  \centering
+  \begin{tikzpicture}[scale=0.85, every node/.style={font=\tiny}]
+    \draw[rounded corners=2pt,fill=lightbg,draw=gray!50] (0,1.6) rectangle (2.0,2.8);
+    \node at (1.0,2.2) {khung sạch};
+    \draw[->,thick,riskred] (2.2,2.2) -- node[above,font=\tiny]{nhiễu} (3.4,2.2);
+    \draw[rounded corners=2pt,fill=riskred!10,draw=riskred!60] (3.6,1.6) rectangle (5.6,2.8);
+    \node at (4.6,2.2) {khung nhiễu};
+    \draw[->,thick,gray] (2.8,1.5) -- (2.8,0.9);
+    \draw[rounded corners=2pt,fill=methodteal!10,draw=methodteal] (1.3,-0.1) rectangle (4.3,0.8);
+    \node[align=center] at (2.8,0.35) {mô hình đã huấn luyện\\{\tiny (trên dữ liệu sạch)}};
+    \draw[->,thick,gray] (2.8,-0.2) -- (2.8,-0.8);
+    \node[align=center] at (2.8,-1.15) {Recall@K / mR@K\\{\tiny tụt bao nhiêu?}};
+  \end{tikzpicture}
+\end{column}
+\end{columns}
+\end{frame}
+
+\section{Kết quả}
+
+\begin{frame}{Thiết lập thực nghiệm}
+{\small
+\begin{tabular}{@{}p{0.2\textwidth} p{0.76\textwidth}@{}}
+  \toprule
+  \textbf{Dữ liệu} & Action Genome (chú giải trên video Charades) \\
+  \textbf{Chỉ số} & Recall@K và \emphkey{mean Recall@K}, $K \in \{10,20,50\}$ \\
+  \midrule
+  \textbf{VidSGG} & \textbf{SGDET} chỉ có khung hình $\cdot$
+                    \textbf{SGCLS} thêm hộp bao $\cdot$
+                    \textbf{PREDCLS} thêm cả nhãn vật thể \\
+  \textbf{SGA} & \textbf{AGS} chỉ khung hình $\cdot$
+                 \textbf{PGAGS} thêm hộp bao $\cdot$
+                 \textbf{GAGS} thêm nhãn \\
+  \midrule
+  \textbf{Chiến lược đồ thị} & With Constraint (1 quan hệ / cặp) $\cdot$
+                               No Constraint (nhiều) $\cdot$
+                               Semi (theo ngưỡng) \\
+  \midrule
+  \textbf{Nền VidSGG} & STTran, DSGDetr \\
+  \textbf{Nền SGA} & STTran+, STTran++, DSGDetr+, DSGDetr++,
+                     SceneSayerODE, SceneSayerSDE \\
+  \bottomrule
+\end{tabular}}
+\vspace{7pt}
+\begin{contextblock}{Cách đọc bảng}
+  Mỗi dòng là một mô hình nền, dòng ngay dưới là \emph{cùng mô hình đó} sau khi
+  gắn ImparTail. \emphkey{So theo cặp}, không so chéo giữa các mô hình.
+\end{contextblock}
+\end{frame}
+
+\begin{frame}{VidSGG --- mean Recall (Bảng 1)}
+\centering
+{\small
+\begin{tabular}{@{}l l ccc c ccc@{}}
+  \toprule
+  & & \multicolumn{3}{c}{\textbf{With Constraint}} & &
+      \multicolumn{3}{c}{\textbf{No Constraint}} \\
+  \cmidrule(lr){3-5}\cmidrule(lr){7-9}
+  Mode & Method & mR@10 & mR@20 & mR@50 & & mR@10 & mR@20 & mR@50 \\
+  \midrule
+  \multirow{2}{*}{SGDET}
+    & STTran            & 8.0 & 16.6 & 19.3 & & 19.3 & 26.9 & 35.6 \\
+  \rowcolor{GoodBg}
+    & \;+ImparTail      & \textbf{9.4} & \textbf{21.5} & \textbf{25.9} & &
+                          \textbf{23.5} & \textbf{33.6} & \textbf{43.8} \\
+  \midrule
+  \multirow{2}{*}{SGCLS}
+    & STTran            & 25.0 & 27.5 & 27.6 & & 38.8 & 47.1 & 59.9 \\
+  \rowcolor{GoodBg}
+    & \;+ImparTail      & \textbf{32.3} & \textbf{36.2} & \textbf{36.2} & &
+                          \textbf{47.4} & \textbf{62.2} & \textbf{66.6} \\
+  \midrule
+  \multirow{2}{*}{PREDCLS}
+    & STTran            & 30.5 & 34.7 & 34.7 & & 48.5 & 63.4 & 80.5 \\
+  \rowcolor{GoodBg}
+    & \;+ImparTail      & \textbf{44.0} & \textbf{52.7} & \textbf{52.9} & &
+                          \textbf{65.5} & \textbf{82.0} & \textbf{93.0} \\
+  \bottomrule
+\end{tabular}}
+\vspace{8pt}
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+  \begin{methodblock}{Mức cải thiện mR@10}
+    {\small SGDET $\sim$\textbf{12\%} $\cdot$ SGCLS $\sim$\textbf{22\%} $\cdot$
+    PREDCLS $\geq$\textbf{20\%} \\[3pt]
+    Cải thiện ở \emphok{mọi ô} của bảng.}
+  \end{methodblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+  \muted{\scriptsize Bảng gốc còn có DSGDetr và cột Semi Constraint --- xu hướng
+  giống hệt. Ở đây rút gọn cho dễ nhìn; số đầy đủ ở Bảng 1 của bài báo.}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{SGA và độ bền trước nhiễu (Bảng 2--4)}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+  \textbf{\small SGA --- mean Recall}
+  \\[3pt]
+  {\scriptsize
+  \begin{tabular}{@{}l cc@{}}
+    \toprule
+    Method ($\mathcal{F}{=}0.5$, AGS) & @10 & @20 \\
+    \midrule
+    STTran++            & 7.9 & 14.9 \\
+    \rowcolor{GoodBg}
+    \;+ImparTail        & \textbf{9.3} & \textbf{18.7} \\
+    SceneSayerSDE       & 6.4 & 13.7 \\
+    \rowcolor{GoodBg}
+    \;+ImparTail        & \textbf{7.4} & \textbf{19.1} \\
+    \bottomrule
+  \end{tabular}}
+  \vspace{5pt}
+  {\scriptsize $\sim$\textbf{12\%} cho STTran++/DSGDetr++,
+  $\sim$\textbf{20\%} cho SceneSayer ODE/SDE.}
+\end{column}
+\begin{column}{0.5\textwidth}
+  \textbf{\small Độ bền --- PREDCLS, No Constraint, Gaussian Noise}
+  \\[3pt]
+  \centering
+  \begin{tikzpicture}[scale=0.82, every node/.style={font=\tiny}]
+    \draw[->] (0,0) -- (0,3.1) node[above,font=\tiny]{mR@10};
+    \draw[->] (0,0) -- (4.4,0);
+    \node at (1.1,-0.3) {sạch}; \node at (3.2,-0.3) {nhiễu};
+    \fill[gray!55]      (0.55,0) rectangle (1.15,2.29);
+    \fill[gray!55]      (2.65,0) rectangle (3.25,1.57);
+    \draw[gray,dashed]  (1.15,2.29) -- (2.65,1.57);
+    \node[gray] at (1.9,2.15) {STTran $-14.3$};
+    \fill[methodteal!70] (1.25,0) rectangle (1.85,3.28);
+    \fill[methodteal!70] (3.35,0) rectangle (3.95,2.88);
+    \draw[methodteal,dashed] (1.85,3.28) -- (3.35,2.88);
+    \node[methodteal] at (2.6,3.35) {+ImparTail $-8.0$};
+    \node[font=\tiny,gray]       at (0.85,-0.62) {45.7};
+    \node[font=\tiny,gray]       at (2.95,-0.62) {31.4};
+    \node[font=\tiny,methodteal] at (1.55,-0.62) {65.5};
+    \node[font=\tiny,methodteal] at (3.65,-0.62) {57.5};
+  \end{tikzpicture}
+\end{column}
+\end{columns}
+\vspace{4pt}
+\begin{methodblock}{Kết luận về độ bền}
+  Cả hai đều tụt khi gặp nhiễu --- nhưng mô hình huấn luyện bằng ImparTail
+  \emphok{tụt ít hơn} ($-8{,}0$ so với $-14{,}3$), và điểm sau khi nhiễu vẫn
+  \emphok{cao hơn điểm sạch} của mô hình nền.
+\end{methodblock}
+\end{frame}
+
+\section{Đọc phản biện}
+
+\begin{frame}{Điểm đáng bàn nhất --- curriculum không được dùng để lấy số}
+\begin{alertblock}{Nguyên văn bài báo, mục Remark trang 7}
+  {\small\itshape ``\ldots our experiments on ActionGenome revealed that a fixed
+  Stochastic Masking Ratio of 0.9 achieved \textbf{similar performance} \ldots
+  to a sequential strategy that started at a masking ratio of 0.6 and gradually
+  increased to 0.9. \ldots Therefore, in the paper to report results, we opted
+  for a \textbf{fixed Masking Ratio of 0.9}.''}
+\end{alertblock}
+\vspace{3pt}
+{\small Curriculum-Guided Mask Generation là \emphwarn{đóng góp thứ IV} của bài,
+và chiếm hẳn ô (d) trong Hình 3. Nhưng bảng kết quả chính dùng \emphwarn{tỉ lệ
+che cố định 0{,}9}.}
+\\[6pt]
+\begin{contextblock}{Ba tầng bằng chứng khớp nhau}
+  {\small
+  \begin{tabular}{@{}l l@{}}
+    Bài báo & mục Remark nói rõ dùng tỉ lệ cố định \\
+    Mã nguồn & \texttt{train\_sgg\_methods.py:402} $\to$
+               \texttt{is\_curriculum = False} là mặc định \\
+    Script chạy & \texttt{METHODS=("sttran" "dsgdetr")} ---
+                  \emphwarn{không script nào} gọi biến thể curriculum \\
+  \end{tabular}}
+\end{contextblock}
+\vspace{3pt}
+\muted{\scriptsize Phát biểu thận trọng: đây là mô tả \emph{bài báo và mã đã
+công bố}. Không suy ra tác giả đã chạy hay không chạy gì trong quá trình nghiên
+cứu --- rất có thể họ có chạy curriculum mà chỉ không đưa vào bản phát hành.}
+\end{frame}
+
+\begin{frame}{Vài quan sát khác khi đọc mã}
+{\small
+\begin{tabular}{@{}p{0.30\textwidth} p{0.63\textwidth}@{}}
+  \toprule
+  \textbf{Quan sát} & \textbf{Chi tiết} \\
+  \midrule
+  Đường dẫn cứng của bốn máy &
+    \texttt{/data/rohith/ag}, \texttt{/home/cong/},
+    \texttt{/home/rxp190007/}, \texttt{/home/maths/btech/\ldots} ---
+    chạy máy khác là phải sửa \\
+  \addlinespace
+  Không cố định seed &
+    Chỉ \texttt{fasterRCNN} (mã mượn) có \texttt{manual\_seed}.
+    Vòng huấn luyện chính không có $\Rightarrow$ \emphwarn{không tái lập
+    được ở mức bit} \\
+  \addlinespace
+  Rào cản chạy lại &
+    Cần video Charades thô, tách khung hình, fasterRCNN tiền huấn luyện, và
+    \texttt{torch==1.10.1+cu111} (bản 2021) \\
+  \addlinespace
+  \emphok{Điểm cộng} &
+    Giấy phép \textbf{Apache 2.0} rõ ràng, và có phát hành checkpoint ---
+    khá hơn nhiều repo cùng lĩnh vực \\
+  \bottomrule
+\end{tabular}}
+\vspace{7pt}
+\begin{riskblock}{Vì sao nhóm không chạy lại được}
+  Không phải vì mã hỏng, mà vì \emphwarn{chi phí dữ liệu}: hàng chục GB video
+  cộng bước tách khung, và một phiên bản CUDA mà GPU hiện đại không còn hỗ trợ.
+\end{riskblock}
+\end{frame}
+
+\begin{frame}{Đánh giá --- mạnh ở đâu, yếu ở đâu}
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+  \begin{methodblock}{Điểm mạnh}
+    {\small
+    \begin{itemize}\itemsep3pt
+      \item \emphok{Không thêm tham số} --- gắn được lên 6 mô hình nền khác nhau
+      \item Cải thiện \emphok{nhất quán ở mọi ô} của mọi bảng
+      \item Đặt ra \emphok{hai tác vụ đánh giá mới} mà lĩnh vực còn thiếu
+      \item Ý tưởng đơn giản, phát biểu bằng \emphok{một phương trình}
+    \end{itemize}}
+  \end{methodblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+  \begin{riskblock}{Điểm yếu}
+    {\small
+    \begin{itemize}\itemsep3pt
+      \item Curriculum --- \emphwarn{đóng góp có tên} --- không dùng để lấy số
+            chính
+      \item Không báo cáo \emphwarn{độ lệch chuẩn}, không nói chạy mấy seed
+      \item Tỉ lệ che 0{,}9 rất cao: che 90\% nhãn. Bài báo không khảo sát vì
+            sao con số đó
+      \item Chỉ thử trên \emphwarn{một bộ dữ liệu} (Action Genome)
+    \end{itemize}}
+  \end{riskblock}
+\end{column}
+\end{columns}
+\vspace{4pt}
+\begin{contextblock}{Câu hỏi để lại cho người đọc}
+  Nếu tỉ lệ cố định 0{,}9 cho kết quả tương đương curriculum, thì phần đóng góp
+  thật nằm ở \emph{curriculum} hay chỉ ở \emph{việc che mất mát}? Bài báo chưa
+  tách được hai thứ đó.
+\end{contextblock}
+\end{frame}
+
+\begin{frame}{Ba điều mang về}
+\vspace{4pt}
+\begin{objectiveblock}{1 --- Đổi mục tiêu, đừng đổi kiến trúc}
+  Toàn bộ ImparTail là \emphobj{một phép nhân với mặt nạ nhị phân} trong hàm mất
+  mát. Không thêm tham số nào, mà cải thiện mean Recall 12--22\%. Bài học:
+  trước khi thêm mô-đun, hãy hỏi hàm mục tiêu đã đúng chưa.
+\end{objectiveblock}
+\vspace{2pt}
+\begin{methodblock}{2 --- Chọn chỉ số quyết định điều mình nhìn thấy}
+  Recall@K giấu được điểm yếu ở lớp đuôi vì lớp head lấn át. \emphok{mean
+  Recall@K} đối xử mọi lớp như nhau nên phơi bày vấn đề. Đổi chỉ số là đổi cả
+  bài toán.
+\end{methodblock}
+\vspace{2pt}
+\begin{riskblock}{3 --- Đọc kỹ phần Remark}
+  Đóng góp thứ tư của bài không được dùng để lấy số trong bảng chính --- điều
+  này chỉ nằm trong một đoạn Remark và trong tên phương thức ở mã nguồn.
+  \emphwarn{Đọc bài báo cùng với mã} thì thấy; đọc riêng cái nào cũng không thấy.
+\end{riskblock}
+\end{frame}
+
+\begin{frame}[plain]
+\centering
+\vspace{1.6cm}
+{\Large\bfseries\color{hcmusblue} Cảm ơn --- mời đặt câu hỏi}
+\\[10pt]
+{\small ImparTail: Towards Unbiased and Robust Spatio-Temporal\\
+Scene Graph Generation and Anticipation}
+\\[4pt]
+{\footnotesize CVPR 2025 (Highlight) $\cdot$ Peddi, Saurabh, Shrivastava, Singla, Gogate}
+\\[10pt]
+{\scriptsize\color{MutedTxt}
+Mã nguồn: \texttt{github.com/rohithpeddi/ImparTail} (Apache 2.0)}
+\end{frame}
+
+\end{document}

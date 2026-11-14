@@ -1,0 +1,1045 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\usepackage{fontspec}
+\usetheme{Antibes}
+\setbeamertemplate{navigation symbols}{}
+
+% Page number bottom-right
+\setbeamertemplate{footline}{
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.5ex,dp=1.2ex,right]{author in head/foot}%
+      \usebeamerfont{author in head/foot}
+      \insertframenumber{} / \inserttotalframenumber
+      \hspace*{2ex}
+    \end{beamercolorbox}%
+  }%
+}
+
+% Custom headline: project name + section
+\newcommand{\projectname}{APKGC: Noise-enhanced MMKGC with Attention Penalty (AAAI 2025)}
+\setbeamertemplate{headline}{
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.5ex,dp=1.125ex,left]{section in head/foot}%
+      \usebeamerfont{section in head/foot}\hspace*{2ex}\projectname%
+    \end{beamercolorbox}}%
+  \vskip0pt%
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.5ex,dp=1.125ex,left]{subsection in head/foot}%
+      \usebeamerfont{subsection in head/foot}\hspace*{2ex}\insertsectionhead%
+    \end{beamercolorbox}}%
+  \vskip0pt%
+}
+
+% =====================
+% Packages
+% =====================
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric,backgrounds}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{xcolor}
+
+% =====================
+% Colors
+% =====================
+\definecolor{hcmusblue}{HTML}{1B3A5C}
+\definecolor{contextblue}{HTML}{2E86C1}
+\definecolor{methodteal}{HTML}{16A085}
+\definecolor{objectivepurple}{HTML}{7D3C98}
+\definecolor{riskred}{HTML}{C0392B}
+\definecolor{lightbg}{HTML}{F5F8FC}
+
+\definecolor{GoodGreen}{HTML}{1A6B3C}
+\definecolor{GoodBg}{HTML}{D5EDE0}
+\definecolor{BadRed}{HTML}{A82A1E}
+\definecolor{BadBg}{HTML}{FAE1DE}
+\definecolor{BlueBg}{HTML}{DBE9F8}
+\definecolor{MutedTxt}{HTML}{555555}
+\definecolor{OrangeAc}{HTML}{C05A00}
+
+% Mã màu ba mô thái, dùng nhất quán toàn bài
+\definecolor{structblue}{HTML}{4A7DC0}
+\definecolor{visorange}{HTML}{C05A00}
+\definecolor{textgreen}{HTML}{1A6B3C}
+
+\setbeamercolor{structure}{fg=hcmusblue}
+\setbeamercolor{block title}{fg=white,bg=contextblue}
+\setbeamercolor{block body}{bg=contextblue!7}
+\setbeamercolor{alerted text}{fg=riskred}
+
+% =====================
+% Semantic block environments
+% =====================
+\newenvironment{contextblock}[1]{%
+  \setbeamercolor{block title}{fg=white,bg=contextblue}%
+  \setbeamercolor{block body}{bg=contextblue!7}%
+  \begin{block}{#1}}{\end{block}}
+
+\newenvironment{methodblock}[1]{%
+  \setbeamercolor{block title}{fg=white,bg=methodteal}%
+  \setbeamercolor{block body}{bg=methodteal!7}%
+  \begin{block}{#1}}{\end{block}}
+
+\newenvironment{objectiveblock}[1]{%
+  \setbeamercolor{block title}{fg=white,bg=objectivepurple}%
+  \setbeamercolor{block body}{bg=objectivepurple!7}%
+  \begin{block}{#1}}{\end{block}}
+
+\newenvironment{riskblock}[1]{%
+  \setbeamercolor{block title}{fg=white,bg=riskred}%
+  \setbeamercolor{block body}{bg=riskred!7}%
+  \begin{block}{#1}}{\end{block}}
+
+% =====================
+% Helper commands
+% =====================
+\newcommand{\emphkey}[1]{\textcolor{contextblue}{\textbf{#1}}}
+\newcommand{\emphwarn}[1]{\textcolor{riskred}{\textbf{#1}}}
+\newcommand{\emphok}[1]{\textcolor{methodteal}{\textbf{#1}}}
+\newcommand{\emphobj}[1]{\textcolor{objectivepurple}{\textbf{#1}}}
+\newcommand{\muted}[1]{\textcolor{MutedTxt}{#1}}
+
+\newcommand{\es}{e_{\mathrm{s}}}
+\newcommand{\ev}{e_{\mathrm{v}}}
+\newcommand{\et}{e_{\mathrm{t}}}
+
+% =====================
+% Title
+% =====================
+\title[APKGC]{APKGC: Noise-enhanced Multi-Modal Knowledge Graph\\Completion with Attention Penalty}
+\subtitle{Seminar GraphML --- Học phần HP3}
+\author{Nhóm seminar}
+\institute{ĐHQG-HCM --- Trường Đại học Khoa học Tự nhiên\\Khoa Công nghệ Thông tin}
+\date{\today}
+\setbeamerfont{title}{series=\bfseries}
+\setbeamerfont{frametitle}{size=\normalsize,series=\bfseries}
+\setbeamerfont{block title}{size=\footnotesize,series=\bfseries}
+\setbeamerfont{block body}{size=\footnotesize}
+\setlength{\medskipamount}{3pt}
+\setlength{\bigskipamount}{6pt}
+
+% Section dividers
+\AtBeginSection[]{
+  \begin{frame}
+    \vfill\centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionhead\par
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\begin{document}
+\footnotesize
+
+% -- TITLE ---------------------------------------------------------------------
+\begin{frame}
+  \titlepage
+  \begin{center}
+    \muted{\scriptsize AAAI 2025 (Oral), tr.\ 15005--15013 \quad$\cdot$\quad
+           \texttt{github.com/HubuKG/APKGC}}
+  \end{center}
+\end{frame}
+
+% -- OUTLINE -------------------------------------------------------------------
+\begin{frame}{Nội dung}
+  \tableofcontents
+\end{frame}
+
+% ==============================================================================
+\section{Kiến thức nền}
+% ==============================================================================
+
+\begin{frame}{Đồ thị tri thức và bài toán hoàn thiện}
+\begin{columns}[c]
+\begin{column}{0.46\textwidth}
+  \centering
+  \begin{tikzpicture}[scale=0.72, transform shape,
+    ent/.style={circle, draw=structblue, fill=BlueBg, minimum size=1.35cm,
+                font=\tiny, align=center, line width=0.7pt},
+    unk/.style={circle, draw=BadRed, fill=BadBg, dashed, minimum size=1.35cm,
+                font=\large\bfseries, text=BadRed, line width=0.8pt},
+    rel/.style={-{Stealth[length=2mm]}, structblue, line width=0.6pt},
+    urel/.style={-{Stealth[length=2mm]}, BadRed, dashed, line width=0.6pt},
+    lb/.style={font=\tiny, text=MutedTxt, midway, sloped, above}]
+    \node[ent] (dh) at (0,2.0)   {Dennis\\Hopper};
+    \node[ent] (bv) at (0,-1.4)  {Blue\\Velvet};
+    \node[ent] (aw) at (3.2,0.3) {NSFC\\Award};
+    \node[ent] (yr) at (6.4,2.0) {1987};
+    \node[unk] (qq) at (6.4,-1.4){?};
+    \draw[rel]  (dh) -- node[lb]{award}     (aw);
+    \draw[rel]  (bv) -- node[lb]{nominated} (aw);
+    \draw[rel]  (aw) -- node[lb]{year}      (yr);
+    \draw[urel] (aw) -- node[lb,text=BadRed]{winner} (qq);
+    \node[font=\tiny, text=BadRed] at (6.4,-2.5) {cần dự đoán};
+  \end{tikzpicture}
+\end{column}
+\begin{column}{0.5\textwidth}
+  \begin{contextblock}{Định nghĩa}
+    Đồ thị tri thức $\mathcal{G}=(\mathcal{E},\mathcal{R},\mathcal{T})$.
+    Mỗi sự kiện là một bộ ba $(h,r,t)$.
+  \end{contextblock}
+
+  \begin{riskblock}{Vấn đề gốc: tính không đầy đủ}
+    KG do người xây \emphwarn{luôn thiếu}. DB15K có 12.842 thực thể nhưng chỉ
+    79.222 bộ ba --- rất thưa so với không gian tổ hợp.
+  \end{riskblock}
+
+  \begin{objectiveblock}{Nhiệm vụ KGC}
+    Cho $(h,r,?)$, xếp hạng toàn bộ $\mathcal{E}$ sao cho đáp án đúng lên đầu.
+    Đây là bài toán \emphobj{xếp hạng}, không phải phân loại --- điều này quyết
+    định cách chọn độ đo.
+  \end{objectiveblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Nền tảng: từ TransE đến RotatE}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+  \begin{contextblock}{TransE (NeurIPS'13) --- phép tịnh tiến}
+    $h+r \approx t$, \quad $S=-\lVert h+r-t\rVert$
+    \\[3pt]
+    Quan hệ là một \emphkey{vector dịch chuyển}.
+    \\[3pt]
+    \emphwarn{Hạn chế:} không biểu diễn được quan hệ đối xứng --- nếu $r$ đối
+    xứng thì buộc $r\approx 0$.
+  \end{contextblock}
+\end{column}
+\begin{column}{0.48\textwidth}
+  \begin{methodblock}{RotatE (ICLR'19) --- phép quay phức}
+    $h\circ r \approx t$, \quad $\lvert r_i\rvert = 1$
+    \\[3pt]
+    Quan hệ là phép quay góc $\theta$ trong không gian phức.
+    \\[3pt]
+    \emphok{Xử lý được ba loại quan hệ khó:} đối xứng (quay $180^\circ$),
+    nghịch đảo (quay ngược), hợp thành (cộng góc).
+  \end{methodblock}
+\end{column}
+\end{columns}
+
+\vspace{4pt}
+\begin{objectiveblock}{Vì sao phải đi tiếp sang đa mô thái}
+  Cả hai chỉ khai thác \emphobj{cấu trúc đồ thị}. Với thực thể xuất hiện ít
+  (long-tail), cấu trúc gần như trống nên mô hình không đủ tín hiệu. Trong khi
+  đó thực thể ngoài đời còn mang \emphobj{ảnh} và \emphobj{mô tả văn bản}.
+  \textbf{APKGC kế thừa RotatE làm hàm chấm điểm.}
+\end{objectiveblock}
+\end{frame}
+
+\begin{frame}{MMKG: mỗi thực thể mang ba mô thái}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+  {\scriptsize
+  \begin{tabular}{@{}llll@{}}
+    \toprule
+    Mô thái & Ký hiệu & Trích bằng & Trạng thái\\
+    \midrule
+    \textcolor{structblue}{Cấu trúc} & $\es$ & \texttt{nn.Embedding} & Huấn luyện\\
+    \textcolor{visorange}{Thị giác}  & $\ev$ & BEiT, 4096-d & \emphwarn{Đóng băng}\\
+    \textcolor{textgreen}{Văn bản}   & $\et$ & BERT, 768-d  & \emphwarn{Đóng băng}\\
+    \bottomrule
+  \end{tabular}}
+
+  \vspace{6pt}
+  \begin{methodblock}{Hệ quả của việc đóng băng}
+    APKGC chỉ học \emphok{ma trận chiếu và cách hợp nhất}, không tinh chỉnh
+    encoder. Đây là lý do mô hình chạy được trên một GPU đơn.
+  \end{methodblock}
+\end{column}
+\begin{column}{0.42\textwidth}
+  \begin{riskblock}{Thực tế: mô thái bị thiếu}
+    Trong MKG-W nhiều thực thể \emphwarn{không có ảnh hoặc mô tả}. Repo lưu danh
+    sách trong \texttt{missing.json}.
+    \\[3pt]
+    APKGC lấp chỗ trống bằng vector sinh từ $\mathcal{N}(\mu,\sigma)$ của các
+    thực thể còn đủ mô thái --- hé lộ tinh thần xuyên suốt bài báo:
+    \emphwarn{nhiễu không phải kẻ thù}.
+  \end{riskblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================================
+\section{Hai vấn đề bài báo đặt ra}
+% ==============================================================================
+
+\begin{frame}{Vấn đề 1 --- mô hình thiếu bền vững trước nhiễu}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+  \begin{riskblock}{Cách làm trước đây}
+    Xem nhiễu là yếu tố gây nhiễu loạn cần loại bỏ: lọc ảnh không khớp, loại mô
+    tả sai lệch, làm sạch dữ liệu trước khi huấn luyện.
+  \end{riskblock}
+
+  \begin{riskblock}{Ba điểm hụt}
+    \begin{itemize}\itemsep2pt
+      \item Dữ liệu thực tế \emphwarn{luôn bẩn} --- không tồn tại tập triển khai đã sạch.
+      \item Mô hình huấn luyện trên dữ liệu sạch \emphwarn{chưa từng gặp nhiễu}, dễ gãy khi vận hành.
+      \item Lọc mạnh làm mất thông tin của nhóm thực thể hiếm --- đúng nhóm cần hỗ trợ nhất.
+    \end{itemize}
+  \end{riskblock}
+\end{column}
+\begin{column}{0.48\textwidth}
+  \begin{methodblock}{Lật ngược của APKGC}
+    Thay vì chống nhiễu, \emphok{chủ động tiêm nhiễu} trong quá trình huấn luyện.
+  \end{methodblock}
+
+  \begin{contextblock}{Liên hệ với kiến thức đã biết}
+    Cùng nguyên lý với \emphkey{data augmentation} trong thị giác máy tính và
+    với \emphkey{dropout}: buộc mô hình học đặc trưng bền vững thay vì ghi nhớ
+    máy móc.
+    \\[3pt]
+    Dropout tắt ngẫu nhiên nơ-ron để mạng không phụ thuộc một đường dẫn duy
+    nhất. APKGC làm điều tương tự ở \emphkey{mức mô thái}.
+  \end{contextblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Vấn đề 2 --- attention over-trust}
+\begin{columns}[c]
+\begin{column}{0.44\textwidth}
+  \centering
+  \begin{tikzpicture}[scale=0.85, transform shape,
+    lb/.style={font=\tiny, text=MutedTxt}]
+    \node[font=\scriptsize\bfseries, text=BadRed, anchor=west] at (0,3.5)
+         {Trước: chú ý dồn vào dấu chấm};
+    \fill[gray!12] (0.00,1.85) rectangle (4.60,3.25);
+    \fill[structblue!45] (0.05,1.9) rectangle ++(0.8,0.60);
+    \fill[structblue!38] (1.00,1.9) rectangle ++(0.8,0.48);
+    \fill[structblue!32] (1.95,1.9) rectangle ++(0.8,0.38);
+    \fill[structblue!26] (2.90,1.9) rectangle ++(0.8,0.30);
+    \fill[BadRed!85]     (3.85,1.9) rectangle ++(0.7,1.30);
+    \node[lb] at (0.45,1.72) {Umbria};
+    \node[lb] at (1.40,1.72) {is};
+    \node[lb] at (2.35,1.72) {only};
+    \node[lb] at (3.30,1.72) {region};
+    \node[lb, text=BadRed] at (4.20,1.72) {.};
+    \node[font=\tiny\bfseries, text=BadRed] at (4.20,3.38) {0.66};
+
+    \node[font=\scriptsize\bfseries, text=GoodGreen, anchor=west] at (0,1.15)
+         {Sau: phạt rồi tái phân bổ};
+    \fill[gray!12] (0.00,-0.55) rectangle (4.60,0.85);
+    \fill[GoodGreen!70] (0.05,-0.5) rectangle ++(0.8,0.85);
+    \fill[GoodGreen!55] (1.00,-0.5) rectangle ++(0.8,0.62);
+    \fill[GoodGreen!62] (1.95,-0.5) rectangle ++(0.8,0.72);
+    \fill[GoodGreen!66] (2.90,-0.5) rectangle ++(0.8,0.78);
+    \fill[GoodGreen!25] (3.85,-0.5) rectangle ++(0.7,0.26);
+    \node[lb] at (0.45,-0.7) {Umbria};
+    \node[lb] at (1.40,-0.7) {is};
+    \node[lb] at (2.35,-0.7) {only};
+    \node[lb] at (3.30,-0.7) {region};
+    \node[lb] at (4.20,-0.7) {.};
+    \node[font=\tiny\bfseries, text=GoodGreen] at (4.20,-0.10) {0.13};
+  \end{tikzpicture}
+\end{column}
+\begin{column}{0.52\textwidth}
+  \begin{riskblock}{Hiện tượng}
+    Mô hình ngôn ngữ tiền huấn luyện dồn trọng số chú ý vào token
+    \emphwarn{không mang ngữ nghĩa} --- dấu chấm, dấu phẩy, token đặc biệt.
+    Trong ví dụ, dấu chấm nhận 0.66 còn danh từ riêng bị bỏ qua.
+  \end{riskblock}
+
+  \begin{contextblock}{Vì sao xảy ra}
+    Được ghi nhận độc lập trong nghiên cứu về ảo giác đa mô thái
+    (Huang et al., 2023). Token phổ biến xuất hiện ở mọi câu nên trở thành điểm
+    trú ẩn an toàn khi mô hình không chắc chắn --- tương tự khái niệm
+    \emphkey{attention sink}.
+  \end{contextblock}
+
+  \begin{methodblock}{Hướng chữa của APKGC}
+    \emphok{Phát hiện và phạt} token bị tin tưởng quá mức, rồi \emphok{trả lại}
+    phần chú ý đó cho token lân cận có ngữ nghĩa.
+  \end{methodblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================================
+\section{Kiến trúc APKGC}
+% ==============================================================================
+
+\begin{frame}{Toàn cảnh: ba khối nối tiếp}
+\centering
+\begin{tikzpicture}[scale=0.88, transform shape,
+  blk/.style={draw=gray!50, fill=white, rounded corners=2pt, inner sep=4pt,
+              text width=3.0cm, align=center, font=\tiny},
+  ar/.style={-{Stealth[length=2mm]}, gray!70, line width=0.7pt}]
+
+  \node[blk] (a1) at (0,3.0) {$\es$ \quad $\ev$ \quad $\et$};
+  \node[blk, draw=visorange, fill=OrangeAc!8] (a2) at (0,2.0)
+       {\textbf{Adaptive noise sampling}\\ $\rho>\theta_n$ ? trộn nhiễu : giữ nguyên};
+  \node[blk] (a3) at (0,0.85)
+       {$e \leftarrow (1{-}\text{mask})\,e + \text{mask}\cdot\text{noise}$};
+  \begin{scope}[on background layer]
+    \node[draw=visorange, rounded corners=4pt, inner sep=8pt,
+          fill=OrangeAc!4, fit=(a1)(a3)] (ga) {};
+  \end{scope}
+  \node[font=\scriptsize\bfseries, text=visorange] at (0,4.15)
+       {(a) Modality Noise Sampling};
+
+  \node[blk] (b1) at (5.2,3.0) {Self-attention: $QK^{\!\top}\!/\sqrt{d}$};
+  \node[blk, draw=BadRed, fill=BadBg] (b2) at (5.2,1.95)
+       {\textbf{\textcolor{BadRed}{Attention Penalty}}\\
+        tích luỹ hậu tố, phát hiện\\ và phạt token vượt ngưỡng $\phi$};
+  \node[blk] (b3) at (5.2,0.85) {tái phân bổ cho cửa sổ $k$};
+  \begin{scope}[on background layer]
+    \node[draw=BadRed, rounded corners=4pt, inner sep=8pt,
+          fill=BadBg!35, fit=(b1)(b3)] (gb) {};
+  \end{scope}
+  \node[font=\scriptsize\bfseries, text=BadRed] at (5.2,4.15)
+       {(b) Entity Feature Extraction};
+
+  \node[blk] (c1) at (10.4,3.0) {Modality interaction: $\theta_{ab}$};
+  \node[blk] (c2) at (10.4,2.0) {hợp nhất ba mô thái};
+  \node[blk, draw=GoodGreen, fill=GoodBg] (c3) at (10.4,0.85)
+       {\textbf{\textcolor{GoodGreen}{RotatE score}}\\
+        $S=\gamma-\lVert h\circ r-t\rVert$};
+  \begin{scope}[on background layer]
+    \node[draw=GoodGreen, rounded corners=4pt, inner sep=8pt,
+          fill=GoodBg!35, fit=(c1)(c3)] (gc) {};
+  \end{scope}
+  \node[font=\scriptsize\bfseries, text=GoodGreen] at (10.4,4.15)
+       {(c) Triple Score \& Prediction};
+
+  \draw[ar] (ga.east) -- node[above, font=\tiny, text=MutedTxt]{token} (gb.west);
+  \draw[ar] (gb.east) -- node[above, font=\tiny, text=MutedTxt]{$H$} (gc.west);
+\end{tikzpicture}
+
+\vspace{6pt}
+\muted{\scriptsize Hai đóng góp chính nằm ở khối (a) và (b); khối (c) kế thừa RotatE.}
+\end{frame}
+
+\begin{frame}{Đóng góp 1 --- Adaptive Noise Sampling}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+  \begin{methodblock}{Sinh nhiễu theo phân phối dữ liệu}
+    Gaussian (dùng cho DB15K):
+    \[ \mathbf{N}_g=\theta_r(\varphi_m\odot g+\mu_m),\quad g\sim K(0,Z) \]
+    Average (dùng cho MKG-W):
+    \[ \mathbf{N}_a=\theta_r[\beta_{\min}+(\beta_{\max}-\beta_{\min})\odot U] \]
+    \emphok{Điểm mấu chốt:} nhiễu lấy $\mu$ và $\sigma$ của chính tập dữ liệu,
+    nên vector nhiễu vẫn nằm trong vùng hợp lý của không gian đặc trưng.
+  \end{methodblock}
+\end{column}
+\begin{column}{0.47\textwidth}
+  \begin{contextblock}{Quyết định có tiêm hay không}
+    \[
+      \mathbf{V}_n=
+      \begin{cases}
+        (1-\theta_r)\mathbf{V}_o+\mathbf{N}_m & \text{nếu } \rho>\theta_n\\
+        \mathbf{V}_o & \text{ngược lại}
+      \end{cases}
+    \]
+    với $\rho\sim U[0,1]$ cho từng thực thể.
+  \end{contextblock}
+
+  \begin{riskblock}{Đối chiếu với mã nguồn}
+    \texttt{\scriptsize self.mask\_ratio\ =\ nn.Parameter(0.7)}\\
+    \texttt{\scriptsize self.noise\_ratio = nn.Parameter(0.2)}
+    \\[3pt]
+    Bài báo mô tả $\theta_n$ là \emph{``adaptively tuned during training''}.
+    \emphwarn{Nhóm đã kiểm chứng lại điểm này} --- xem phần thực nghiệm.
+  \end{riskblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Đóng góp 2 --- Attention Penalty: ba nhịp}
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+  \begin{riskblock}{Nhịp 1: phát hiện}
+    Tích luỹ hậu tố của điểm chú ý:
+    \[ P[\dots,i]=\textstyle\prod_{j\ge i} A[\dots,j] \]
+    Vượt ngưỡng $\phi=10$ thì bị đánh dấu.
+    \\[3pt]
+    \emphwarn{Vì sao dùng tích?} Phép nhân khuếch đại: chỉ token cao
+    \emph{dai dẳng} mới bị bắt, cao \emph{nhất thời} thì không.
+  \end{riskblock}
+\end{column}
+\begin{column}{0.32\textwidth}
+  \begin{riskblock}{Nhịp 2: phạt}
+    \[ A^p_j = A^p_i-\theta_p(A^p_i),\ \text{nếu } A^p_i>\phi \]
+    Trong cài đặt: \texttt{clamp} giới hạn biên độ rồi nhân
+    \texttt{penalty\_weights} $=0.001$ để không phạt quá tay.
+  \end{riskblock}
+\end{column}
+\begin{column}{0.32\textwidth}
+  \begin{methodblock}{Nhịp 3: tái phân bổ}
+    \[ A^n_j = A^n_i+\theta^n_j(A^p_i-\phi) \]
+    với $n\sim(p-k,\,p+k)$, $k=1$.
+    \\[3pt]
+    Phần chú ý bị tịch thu \emphok{không biến mất} mà chia lại cho token lân cận
+    --- đây là lý do bài báo gọi là \emph{redistribution}.
+  \end{methodblock}
+\end{column}
+\end{columns}
+
+\vspace{4pt}
+\begin{objectiveblock}{Vì sao cần cả tăng lẫn giảm --- bằng chứng từ ablation}
+  Bảng 4 bỏ riêng từng nhánh: bỏ nhánh tăng cho MRR $0.365$, bỏ nhánh giảm cho
+  $0.369$, đủ cả hai cho $\mathbf{0.374}$. Nghĩa là \emphobj{chỉ phạt thôi chưa
+  đủ} --- phải trả chú ý về đúng chỗ thì mô hình mới hưởng lợi.
+\end{objectiveblock}
+\end{frame}
+
+\begin{frame}{Hợp nhất mô thái và chấm điểm}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+  \begin{methodblock}{Modality interaction}
+    \[ \theta_{ab}=\frac{\exp(Q_a^{\!\top}K_b/\sqrt{d})}
+                        {\exp(Q_a^{\!\top}K_a/\sqrt{d})+\exp(Q_a^{\!\top}K_b/\sqrt{d})} \]
+    \[ \mathbf{V}^i_a=\theta_{ab}\mathbf{V}_a \]
+    Khác multi-head attention thường: công thức này \emphok{cân giữa tự tương
+    quan và tương quan chéo}. Nếu ảnh của thực thể mờ, $\theta$ tự nghiêng về
+    văn bản.
+  \end{methodblock}
+
+  \begin{contextblock}{Hàm mất mát}
+    \[ \mathcal{L}=\frac{1}{|\mathcal{T}|}\sum\Big[-\log\sigma(\lambda-S)
+       -\sum_i v_i\,\sigma(S'-\lambda)\Big] \]
+    $v_i$ là trọng số tự đối kháng, kế thừa từ RotatE.
+  \end{contextblock}
+\end{column}
+\begin{column}{0.45\textwidth}
+  \begin{contextblock}{Sáu phương án hợp nhất trong mã}
+    {\scriptsize
+    \begin{tabular}{@{}ll@{}}
+      \toprule
+      Phương án & Dùng cho\\
+      \midrule
+      \texttt{Mformer\_hd\_graph} & \textbf{DB15K}\\
+      \texttt{Mformer\_hd\_mean}  & \textbf{MKG-W}\\
+      \texttt{Mformer\_weight}    & ---\\
+      \texttt{atten\_weight}      & ---\\
+      \texttt{learnable\_weight}  & ---\\
+      \texttt{cat\_mlp}           & ---\\
+      \bottomrule
+    \end{tabular}}
+  \end{contextblock}
+
+  \begin{riskblock}{Chi tiết đáng chú ý}
+    Hai tập dữ liệu dùng \emphwarn{hai chiến lược khác nhau} cho cả nhiễu lẫn
+    hợp nhất. Vừa là thích ứng hợp lý, vừa làm dấy lên nghi vấn về mức độ điều
+    chỉnh riêng cho từng tập.
+  \end{riskblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================================
+\section{Ví dụ chạy qua mô hình}
+% ==============================================================================
+
+\begin{frame}{Một bộ ba đi xuyên mô hình}
+\begin{contextblock}{Đầu vào}
+  \texttt{\scriptsize ( National Society of Film Critics Award for Best Supporting
+  Actor,\ \ award,\ \ \textcolor{BadRed}{?} )}
+  \\[2pt]
+  Kèm ảnh logo giải thưởng và mô tả văn bản từ DBpedia. Đáp án đúng:
+  \emphkey{Dennis Hopper}.
+\end{contextblock}
+
+\vspace{2pt}
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+  {\scriptsize\textbf{Bước 1--2: tra cứu, tiêm nhiễu}}\\[2pt]
+  {\tiny\ttfamily
+   h\_id = 3417\\
+   $\es$ = ent\_emb[3417], 256-d\\
+   $\ev$ = BEiT, 4096-d\\
+   $\et$ = BERT, 768-d\\
+   \textcolor{OrangeAc}{$\rho$ = 0.31 > $\theta_n$ = 0.2}\\
+   nên tiêm nhiễu vào $\ev$}
+\end{column}
+\begin{column}{0.32\textwidth}
+  {\scriptsize\textbf{Bước 3: chiếu, self-attention}}\\[2pt]
+  {\tiny\ttfamily
+   img\_proj: 4096 $\to$ 256\\
+   text\_proj: 768 $\to$ 256\\
+   stack thành [B, 3, 256]\\
+   A = QK$^{\top}$/$\sqrt{d}$\\
+   \textcolor{BadRed}{A["for"] = 0.66} (over-trust)}
+\end{column}
+\begin{column}{0.32\textwidth}
+  {\scriptsize\textbf{Bước 4: phạt, tái phân bổ}}\\[2pt]
+  {\tiny\ttfamily
+   P = suffix\_prod(A)\\
+   P["for"] = 12.4 > $\phi$ = 10\\
+   nên bị phạt\\
+   \textcolor{GoodGreen}{A["for"]: 0.66 $\to$ 0.50}\\
+   phần dư chia cho token cạnh}
+\end{column}
+\end{columns}
+
+\vspace{6pt}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+  \begin{riskblock}{Không có attention penalty}
+    1.\ Kurtwood Smith\\
+    2.\ \emphwarn{Dennis Hopper} --- đúng nhưng xếp nhì\\
+    3.\ James Marsden
+  \end{riskblock}
+\end{column}
+\begin{column}{0.48\textwidth}
+  \begin{methodblock}{Có attention penalty}
+    1.\ \emphok{Dennis Hopper} --- lên hạng nhất\\
+    2.\ Kurtwood Smith\\
+    3.\ James Marsden
+  \end{methodblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================================
+\section{Thực nghiệm trong bài báo}
+% ==============================================================================
+
+\begin{frame}{So sánh với các mô hình nền}
+\begin{columns}[T]
+\begin{column}{0.53\textwidth}
+  {\scriptsize
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    \multirow{2}{*}{Mô hình} & \multicolumn{2}{c}{DB15K} & \multicolumn{2}{c}{MKG-W}\\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+     & MRR & H@1 & MRR & H@1\\
+    \midrule
+    TransE \tiny(NeurIPS'13) & 0.249 & 0.128 & 0.292 & 0.211\\
+    RotatE \tiny(ICLR'19)    & 0.293 & 0.179 & 0.337 & 0.268\\
+    PairRE \tiny(ACL'21)     & 0.311 & 0.216 & 0.344 & 0.282\\
+    IMF \tiny(WWW'23)        & 0.323 & 0.242 & 0.345 & 0.288\\
+    AdaMF \tiny(COLING'24)   & 0.325 & 0.213 & 0.343 & 0.272\\
+    SnAg \tiny('24)          & 0.342 & 0.250 & 0.359 & 0.284\\
+    NativE \tiny(SIGIR'24)   & 0.362 & 0.273 & 0.366 & 0.296\\
+    \midrule
+    \rowcolor{BlueBg}
+    \textbf{APKGC} & \textbf{0.364} & \textbf{0.282} & \textbf{0.374} & \textbf{0.306}\\
+    \bottomrule
+  \end{tabular}}
+\end{column}
+\begin{column}{0.44\textwidth}
+  \begin{contextblock}{Điều bài báo nhấn mạnh}
+    Hits@1 tăng \emphkey{3.3\%} trên DB15K ($0.273\to0.282$) và \emphkey{3.4\%}
+    trên MKG-W ($0.296\to0.306$) so với NativE.
+  \end{contextblock}
+
+  \begin{riskblock}{Điều cần nói thẳng}
+    \begin{itemize}\itemsep2pt
+      \item Đây là mức tăng \emphwarn{tương đối}; chênh lệch tuyệt đối chỉ khoảng
+            \emphwarn{0.9 điểm phần trăm}.
+      \item Ở Hits@10 trên DB15K, APKGC \emphwarn{thua} NativE ($0.527$ so với
+            $0.529$) và bài báo không thảo luận.
+      \item Bảng \emphwarn{không báo cáo độ lệch chuẩn}. Nhóm đã tự đo --- xem
+            phần sau.
+    \end{itemize}
+  \end{riskblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Ablation: bỏ thành phần nào thì hỏng đến đâu}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+  {\scriptsize
+  \textbf{Theo mô thái (DB15K)}\\[3pt]
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    Cấu hình & MRR & H@1 & H@10\\
+    \midrule
+    Chỉ cấu trúc       & 0.211 & 0.125 & 0.345\\
+    Chỉ ảnh            & 0.336 & 0.261 & 0.469\\
+    Chỉ văn bản        & 0.348 & 0.273 & 0.505\\
+    Cấu trúc + ảnh     & 0.340 & 0.260 & 0.480\\
+    Văn bản + cấu trúc & 0.351 & 0.279 & 0.509\\
+    Ảnh + văn bản      & 0.357 & 0.274 & 0.521\\
+    \midrule
+    \rowcolor{BlueBg}
+    \textbf{Đủ ba}     & \textbf{0.364} & \textbf{0.282} & \textbf{0.527}\\
+    \bottomrule
+  \end{tabular}}
+  \\[4pt]
+  \muted{\scriptsize Chỉ cấu trúc kém xa phần còn lại. Văn bản đóng góp nhiều hơn
+  ảnh: bỏ văn bản mất 8.9\% H@10, bỏ ảnh chỉ mất 3.4\%.}
+\end{column}
+\begin{column}{0.48\textwidth}
+  {\scriptsize
+  \textbf{Theo thành phần (MKG-W)}\\[3pt]
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    Cấu hình & MRR & H@1 & H@10\\
+    \midrule
+    Bỏ lấy mẫu nhiễu     & 0.358 & 0.289 & 0.486\\
+    Bỏ attention penalty & 0.360 & 0.286 & 0.492\\
+    Bỏ nhánh tăng        & 0.365 & 0.297 & 0.491\\
+    Bỏ nhánh giảm        & 0.369 & 0.302 & 0.495\\
+    \midrule
+    \rowcolor{BlueBg}
+    \textbf{Đầy đủ}      & \textbf{0.374} & \textbf{0.306} & \textbf{0.501}\\
+    \bottomrule
+  \end{tabular}}
+  \\[4pt]
+  \begin{objectiveblock}{Quan sát thú vị}
+    \emphobj{Lấy mẫu nhiễu đóng góp nhiều hơn attention penalty} (mất 0.016 so
+    với 0.014 MRR) --- dù tiêu đề bài báo đặt attention penalty ở vị trí nổi bật
+    hơn.
+  \end{objectiveblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Phân tích siêu tham số: phạt quá tay cũng hỏng}
+\begin{columns}[c]
+\begin{column}{0.46\textwidth}
+  \centering
+  {\scriptsize DB15K --- MRR theo số cửa sổ $k$ và tỉ lệ phạt $\theta_p$}\\[4pt]
+  \begin{tikzpicture}[scale=0.9, transform shape,
+    lb/.style={font=\tiny, text=MutedTxt}]
+    \node[lb] at (-0.5,2.95) {$k$=4};
+    \node[lb] at (-0.5,2.25) {$k$=3};
+    \node[lb] at (-0.5,1.55) {$k$=2};
+    \node[lb] at (-0.5,0.85) {$k$=1};
+    \node[lb] at (0.60,0.20) {1};
+    \node[lb] at (1.85,0.20) {0.001};
+    \node[lb] at (3.10,0.20) {0.01};
+    \node[lb] at (4.35,0.20) {0.1};
+    \node[lb] at (2.4,-0.20) {tỉ lệ phạt $\theta_p$};
+
+    \fill[structblue!55] (0.0,2.65) rectangle ++(1.2,0.6);
+    \fill[structblue!54] (1.25,2.65) rectangle ++(1.2,0.6);
+    \fill[structblue!38] (2.50,2.65) rectangle ++(1.2,0.6);
+    \fill[structblue!33] (3.75,2.65) rectangle ++(1.2,0.6);
+    \node[font=\tiny] at (0.60,2.95) {.345};
+    \node[font=\tiny] at (1.85,2.95) {.343};
+    \node[font=\tiny] at (3.10,2.95) {.329};
+    \node[font=\tiny] at (4.35,2.95) {.324};
+
+    \fill[structblue!58] (0.0,1.95) rectangle ++(1.2,0.6);
+    \fill[structblue!62] (1.25,1.95) rectangle ++(1.2,0.6);
+    \fill[structblue!52] (2.50,1.95) rectangle ++(1.2,0.6);
+    \fill[structblue!42] (3.75,1.95) rectangle ++(1.2,0.6);
+    \node[font=\tiny] at (0.60,2.25) {.348};
+    \node[font=\tiny] at (1.85,2.25) {.352};
+    \node[font=\tiny] at (3.10,2.25) {.342};
+    \node[font=\tiny] at (4.35,2.25) {.332};
+
+    \fill[structblue!60] (0.0,1.25) rectangle ++(1.2,0.6);
+    \fill[structblue!66] (1.25,1.25) rectangle ++(1.2,0.6);
+    \fill[structblue!95] (2.50,1.25) rectangle ++(1.2,0.6);
+    \fill[structblue!43] (3.75,1.25) rectangle ++(1.2,0.6);
+    \node[font=\tiny] at (0.60,1.55) {.350};
+    \node[font=\tiny] at (1.85,1.55) {.356};
+    \node[font=\tiny\bfseries, text=white] at (3.10,1.55) {.364};
+    \node[font=\tiny] at (4.35,1.55) {.330};
+
+    \fill[structblue!44] (0.0,0.55) rectangle ++(1.2,0.6);
+    \fill[structblue!62] (1.25,0.55) rectangle ++(1.2,0.6);
+    \fill[structblue!66] (2.50,0.55) rectangle ++(1.2,0.6);
+    \fill[structblue!55] (3.75,0.55) rectangle ++(1.2,0.6);
+    \node[font=\tiny] at (0.60,0.85) {.330};
+    \node[font=\tiny] at (1.85,0.85) {.349};
+    \node[font=\tiny] at (3.10,0.85) {.353};
+    \node[font=\tiny] at (4.35,0.85) {.344};
+  \end{tikzpicture}
+\end{column}
+\begin{column}{0.5\textwidth}
+  \begin{objectiveblock}{Đường cong hình chữ U ngược}
+    Hiệu năng đạt đỉnh ở \emphobj{vùng giữa} ($k=2$, $\theta_p=0.01$, MRR
+    $0.364$) rồi suy giảm về cả hai phía.
+  \end{objectiveblock}
+
+  \begin{riskblock}{Hai đầu đều xấu}
+    \emphwarn{Phạt quá nhẹ:} không đủ kéo chú ý khỏi token vô nghĩa.\\[3pt]
+    \emphwarn{Phạt quá nặng:} phá vỡ cả những phân bổ chú ý đúng đắn. Tại
+    $\theta_p=0.1$, MRR rơi xuống $0.324$ --- thấp hơn cả khi không dùng penalty.
+  \end{riskblock}
+
+  \begin{contextblock}{Ý nghĩa thực tiễn}
+    Đây là hạn chế về khả năng triển khai: mỗi tập dữ liệu mới đều đòi hỏi dò
+    lại lưới siêu tham số, và bài báo không đề xuất cách chọn tự động.
+  \end{contextblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================================
+\section{Thực nghiệm của nhóm}
+% ==============================================================================
+
+\begin{frame}{Chúng tôi chạy lại --- số liệu tự đo}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+  {\scriptsize
+  \textbf{MKG-W --- Kaggle, GPU Tesla P100}\\[4pt]
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    Seed & MRR & H@1 & H@3 & H@10\\
+    \midrule
+    \multicolumn{5}{@{}l}{\itshape Đợt 1 --- 8000 epoch, đánh giá mỗi 100}\\
+    7    & 0.3616 & 0.2942 & 0.3918 & 0.4853\\
+    42   & 0.3641 & 0.2956 & 0.3954 & 0.4840\\
+    \multicolumn{5}{@{}l}{\itshape Đợt 2 --- 2000 epoch, đánh giá mỗi 250}\\
+    1234 & 0.3610 & 0.2987 & 0.3864 & 0.4759\\
+    2024 & 0.3611 & 0.2943 & 0.3907 & 0.4819\\
+    3407 & 0.3595 & 0.2925 & 0.3917 & 0.4799\\
+    \midrule
+    \rowcolor{GoodBg}
+    \textbf{TB đợt 2} & \textbf{0.3605} & 0.2952 & 0.3896 & 0.4792\\
+    Bài báo & 0.3740 & 0.3060 & 0.4040 & 0.5010\\
+    \bottomrule
+  \end{tabular}}
+  \\[5pt]
+  \muted{\scriptsize Hai đợt \textbf{khác điều kiện} nên báo cáo tách biệt. Ước
+  lượng độ lệch chuẩn lấy từ đợt 2 --- ba lần chạy duy nhất cùng điều kiện.}
+  \\[4pt]
+  \emphok{\scriptsize Tái lập: chạy lại seed 42 sau sáu ngày, phiên độc lập ---
+  bốn chỉ số \textbf{trùng đến chữ số thứ năm}. Quy trình có tính tất định.}
+\end{column}
+\begin{column}{0.47\textwidth}
+  \begin{methodblock}{Mô hình ổn định giữa các seed}
+    Độ lệch chuẩn MRR (đợt 2, $n{=}3$) $=\mathbf{0.0009}$.
+    \\[3pt]
+    {\scriptsize
+    \begin{tabular}{@{}lcc@{}}
+      Khoảng cách trong bài báo & giá trị & so với std\\
+      \midrule
+      vs NativE (DB15K) & 0.002 & $2.2\times$\\
+      vs NativE (MKG-W) & 0.008 & $8.9\times$\\
+      attention penalty & 0.014 & $15.6\times$\\
+      noise sampling    & 0.016 & $17.8\times$\\
+    \end{tabular}}
+    \\[3pt]
+    \emphok{Mọi khoảng cách bài báo báo cáo đều vượt nhiễu seed. Giả thuyết ban
+    đầu của nhóm bị chính số liệu bác bỏ.}
+  \end{methodblock}
+
+  \begin{riskblock}{Lệch hệ thống $-0.0135$ MRR}
+    Đều ở cả bốn chỉ số, \emphwarn{cả năm lần chạy} --- gấp \emphwarn{mười lăm
+    lần} độ lệch chuẩn, nên không phải dao động ngẫu nhiên.
+    \\[3pt]
+    Nghi vấn: bài báo ghi batch 2048 / neg 64, script chạy 1024 / 32.
+    \emphwarn{Nhóm đã chạy thí nghiệm tách nguyên nhân} --- xem slide sau.
+    \\[3pt]
+    {\scriptsize Không do dao động khi chạy: dao động đó \textbf{bằng không}.}
+  \end{riskblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Tách nguyên nhân: chạy đúng cấu hình bài báo}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+  {\scriptsize
+  \textbf{Chạy lại với batch 2048 / neg 64} (đúng tr.\ 15010), seed 42\\[2pt]
+  {\tiny Cùng điều kiện đợt 2 nên đối chứng là đợt 2, không phải trung bình gộp.}\\[4pt]
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    Chỉ số & Đợt 2 & Bài báo & Công bố\\
+           & \scriptsize 1024/32 & \scriptsize 2048/64 & \\
+    \midrule
+    MRR    & 0.3605 & \textbf{0.3691} & 0.3740\\
+    H@1    & 0.2952 & \textbf{0.3028} & 0.3060\\
+    H@3    & 0.3896 & \textbf{0.3997} & 0.4040\\
+    H@10   & 0.4792 & 0.4874 & 0.5010\\
+    \bottomrule
+  \end{tabular}
+  \\[8pt]
+  \textbf{Khoảng cách tới số công bố}\\[4pt]
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    Chỉ số & Đợt 2 & Bài báo & Thu hẹp\\
+    \midrule
+    MRR  & $-0.0135$ & $-0.0049$ & \textbf{64\%}\\
+    H@1  & $-0.0108$ & $-0.0032$ & \textbf{70\%}\\
+    H@3  & $-0.0144$ & $-0.0043$ & \textbf{70\%}\\
+    H@10 & $-0.0218$ & $-0.0136$ & 37\%\\
+    \bottomrule
+  \end{tabular}}
+\end{column}
+\begin{column}{0.45\textwidth}
+  \begin{methodblock}{Giả thuyết được xác nhận}
+    Chạy đúng cấu hình ghi trong bài báo \emphok{thu hẹp 64\%} khoảng lệch MRR,
+    và \emphok{70\%} ở Hits@1 lẫn Hits@3. Riêng cấu hình đóng góp
+    \emphok{$+0.0086$ MRR} --- gấp gần mười lần độ lệch chuẩn.
+    \\[3pt]
+    Phát biểu kiểm chứng được: \textit{tệp \texttt{run.sh} gọi script đặt batch
+    1024 / neg 32, khác con số 2048 / 64 ghi trong bài. Người làm theo hướng dẫn
+    trong repo sẽ không tái tạo được bảng kết quả.}
+  \end{methodblock}
+
+  \begin{riskblock}{Phần chưa giải thích: 0.0049 MRR}
+    Vẫn gấp năm lần độ lệch chuẩn. Ba nguyên nhân còn lại:
+    \begin{itemize}\itemsep1pt
+      \item Phần cứng: P100 so với RTX 4090
+      \item torch 2.4.1 thay vì bản tác giả dùng
+      \item Chỉ chạy 2000 epoch, đánh giá mỗi 250 (script gốc: 8000 và 100)
+    \end{itemize}
+    \emphwarn{Chỉ một seed} nên chưa có độ lệch chuẩn riêng.
+  \end{riskblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Sáu rào cản trước khi chạy được dòng đầu tiên}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+  \begin{riskblock}{Trong mã nguồn công bố}
+    \begin{itemize}\itemsep2pt
+      \item \emphwarn{Thiếu hẳn mã C++.} \texttt{make.sh} cần
+            \texttt{mmkgc/base/} nhưng thư mục không được commit;
+            \texttt{Base.so} sẵn có là ELF x86-64.
+      \item \emphwarn{17 lời gọi \texttt{.cuda()} cứng} --- không có GPU NVIDIA
+            là hỏng.
+      \item \texttt{requirement.txt} thiếu \texttt{scikit-learn}, \texttt{scipy}.
+      \item Ghi kết quả ra \texttt{../../data/} --- ngoài thư mục dự án.
+      \item Sập nếu chạy dưới 100 epoch: \texttt{best\_model\_wts} truy cập vô
+            điều kiện.
+      \item \texttt{torch>=1.6.0} không có cận trên --- bản mới bỏ hỗ trợ sm\_60.
+    \end{itemize}
+  \end{riskblock}
+\end{column}
+\begin{column}{0.47\textwidth}
+  \begin{methodblock}{Cách nhóm khắc phục}
+    \texttt{mmkgc/} hoá ra là bản sửa đổi của \emphok{OpenKE} (THUNLP). Lấy
+    \texttt{base/} từ repo gốc, đối chiếu chữ ký \texttt{sampling()} --- khớp
+    đúng 11 tham số --- rồi biên dịch lại. Chạy được trên cả ARM64 lẫn x86-64.
+  \end{methodblock}
+
+  \begin{objectiveblock}{Chi phí tính toán --- nút thắt bất ngờ}
+    {\scriptsize
+    \begin{tabular}{@{}lr@{}}
+      \toprule
+      Khâu & Thời gian\\
+      \midrule
+      Huấn luyện & 8.4 giây / epoch\\
+      \textbf{Đánh giá} & \textbf{21 phút / lần}\\
+      \bottomrule
+    \end{tabular}}
+    \\[4pt]
+    \texttt{run\_link\_prediction} xếp hạng \emphobj{tuần tự} 4.274 bộ ba, hai
+    chiều, mỗi lần trên 15.000 thực thể, không gộp lô. Cấu hình gốc cần khoảng
+    \emphobj{28 giờ chỉ riêng đánh giá}.
+  \end{objectiveblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================================
+\section{Đánh giá và hướng cải tiến}
+% ==============================================================================
+
+\begin{frame}{Đọc bài báo bằng con mắt phản biện}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+  \begin{methodblock}{Điểm mạnh}
+    \begin{itemize}\itemsep2pt
+      \item \emphok{Lật ngược một giả định phổ biến.} Nhiễu từ kẻ thù thành công
+            cụ --- đóng góp về tư duy, không chỉ kỹ thuật.
+      \item \emphok{Chẩn đoán đúng vấn đề.} Attention over-trust được ghi nhận
+            độc lập trong nghiên cứu khác.
+      \item \emphok{Tái phân bổ chứ không chỉ triệt tiêu.} Ablation chứng minh
+            cả hai nhánh đều đóng góp.
+      \item \emphok{Ổn định giữa các seed} --- nhóm tự kiểm chứng, độ lệch
+            chuẩn chỉ $0.0009$.
+    \end{itemize}
+  \end{methodblock}
+\end{column}
+\begin{column}{0.48\textwidth}
+  \begin{riskblock}{Hạn chế}
+    \begin{itemize}\itemsep2pt
+      \item Mức cải thiện dưới một điểm phần trăm tuyệt đối, \emphwarn{không có
+            độ lệch chuẩn} trong bài.
+      \item \emphwarn{Thua ở Hits@10} trên DB15K nhưng không thảo luận.
+      \item Ngưỡng cứng thiếu biện luận: $\phi{=}10$, \texttt{max}${=}15$,
+            \texttt{weights}${=}0.001$.
+      \item Cấu hình khác nhau theo từng tập dữ liệu.
+      \item \emphwarn{Bài báo và mã nguồn không khớp}: batch 2048 / neg 64 so với
+            1024 / 32 trong script.
+      \item Tích luỹ hậu tố dùng vòng lặp Python --- nhóm đã thử vector hoá,
+            hoá ra \emphwarn{không có lợi} ở quy mô hiện tại.
+    \end{itemize}
+  \end{riskblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Sáu hướng cải tiến, xếp theo công sức}
+{\scriptsize
+\begin{tabular}{@{}p{2.2cm}p{4.0cm}p{6.4cm}@{}}
+  \toprule
+  Mức độ & Đề xuất & Nội dung\\
+  \midrule
+  \textcolor{MutedTxt}{\textbf{Đã thử}} \muted{xong}
+    & Vector hoá tích luỹ hậu tố
+    & Đã kiểm chứng: kết quả trùng khớp (sai lệch $3{,}8\!\times\!10^{-6}$) nhưng
+      \emphwarn{chậm hơn 1,4 lần} ở cấu hình hiện tại vì chiều cuối chỉ bằng 3.
+      Chỉ có lợi khi chuỗi dài từ 8 trở lên.\\
+  \addlinespace[2pt]
+  \textcolor{GoodGreen}{\textbf{Dễ}} \muted{một ngày}
+    & Ngưỡng thích ứng
+    & Đặt $\phi$ theo phân vị của phân phối chú ý trong từng lô thay vì cố định
+      bằng 10. Hình 3 cho thấy hiệu năng rất nhạy với ngưỡng.\\
+  \addlinespace[2pt]
+  \textcolor{OrangeAc}{\textbf{Trung bình}} \muted{vài ngày}
+    & Lịch trình nhiễu
+    & Giảm dần cường độ nhiễu theo tiến trình huấn luyện --- mượn ý tưởng từ
+      curriculum learning và lịch trình nhiễu của mô hình khuếch tán.\\
+  \addlinespace[2pt]
+  \textcolor{OrangeAc}{\textbf{Trung bình}} \muted{một tuần}
+    & Chạy đúng cấu hình bài báo
+    & Batch 2048, neg 64 --- để tách riêng nguyên nhân của khoảng lệch $0.011$
+      mà nhóm quan sát được.\\
+  \addlinespace[2pt]
+  \textcolor{BadRed}{\textbf{Khó}} \muted{một tháng}
+    & Kiểm chứng trên tập thứ ba
+    & Bài báo chỉ thử hai tập. Chạy trên MKG-Y trả lời câu hỏi lớn nhất: mô hình
+      có tổng quát hoá được không?\\
+  \addlinespace[2pt]
+  \textcolor{objectivepurple}{\textbf{Mở rộng}}
+    & Thêm mô thái thứ tư
+    & Chính tác giả gợi ý đưa video và âm thanh vào. Cơ chế tương quan chéo
+      $\theta_{ab}$ về nguyên tắc mở rộng được cho $n$ mô thái.\\
+  \bottomrule
+\end{tabular}}
+\end{frame}
+
+\begin{frame}{Ba điều mang về}
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+  \begin{contextblock}{Một}
+    Nhiễu có thể là \emphkey{bạn}. Tiêm nhiễu có kiểm soát trong lúc huấn luyện
+    làm mô hình bền vững hơn là cố lọc sạch dữ liệu --- cùng tinh thần với
+    dropout và data augmentation, nay áp dụng ở mức mô thái.
+  \end{contextblock}
+\end{column}
+\begin{column}{0.32\textwidth}
+  \begin{riskblock}{Hai}
+    Attention \emphwarn{không tự biết} mình đang nhìn nhầm chỗ. Can thiệp trực
+    tiếp vào ma trận chú ý --- phạt rồi trả lại --- là hướng chỉnh sửa hiếm gặp
+    trong các công trình MMKGC.
+  \end{riskblock}
+\end{column}
+\begin{column}{0.32\textwidth}
+  \begin{methodblock}{Ba}
+    \emphok{Đọc mã nguồn cho biết những gì đọc bài báo không cho biết.} Nhóm
+    phát hiện sáu rào cản kỹ thuật, và xác nhận bằng thực nghiệm rằng
+    \textbf{64\% khoảng lệch} đến từ việc script công bố không khớp cấu hình
+    ghi trong bài.
+  \end{methodblock}
+\end{column}
+\end{columns}
+
+\vspace{8pt}
+\begin{center}
+  \muted{\scriptsize Tài liệu kèm theo: báo cáo chi tiết $\cdot$ kết quả chạy lại
+  $\cdot$ rà soát tài liệu $\cdot$ notebook tái lập}
+\end{center}
+\end{frame}
+
+\end{document}

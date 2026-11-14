@@ -1,0 +1,53 @@
+% Figure (full width): the claims of both papers and our verdict on each (Introduction).
+% Message: the headline numbers hold approximately, but most mechanism claims of APKGC do not;
+% ImparTail's baseline reproduces and its released mask differs from the paper.
+% source: Sections IV and VIII of this report (numbers checked by qa/verify_numbers.py).
+% Verdict cells use the pass/fail colours: pass = reproduced, fail = not reproduced or not
+% supported, yellow = partial or code differs, grey = inconclusive or not tested.
+\begin{tikzpicture}[x=1cm, y=1cm, font=\sffamily\scriptsize,
+  zone/.style={rounded corners=12pt, fill=#1!13, draw=#1!75!black, line width=1pt, dash pattern=on 4.5pt off 3pt},
+  claim/.style={anchor=north west, align=left, text width=#1, inner sep=0pt, font=\sffamily\scriptsize\bfseries, execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000}},
+  ev/.style={anchor=north west, align=left, text width=#1, inner sep=0pt, font=\sffamily\scriptsize, execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000}},
+  cell/.style={draw=black, line width=0.8pt, fill=#1, minimum width=1.9cm, minimum height=0.6cm,
+               font=\sffamily\scriptsize\bfseries, inner sep=1pt, align=center, anchor=north},
+  sec/.style={font=\sffamily\scriptsize, text=black!55, anchor=north, inner sep=1.5pt},
+  ztl/.style={font=\sffamily\small\bfseries, anchor=north west, inner sep=0pt},
+  hdr/.style={font=\sffamily\scriptsize\itshape, text=black!55, anchor=west, inner sep=0pt}]
+% ---------------- APKGC ----------------
+\draw[zone=bz] (0,0.55) rectangle (10.3,-5.55);
+\node[ztl] at (0.3,0.35) {APKGC (AAAI 2025)};
+\node[hdr] at (0.3,-0.25) {claim of the paper}; \node[hdr] at (4.0,-0.25) {our evidence};
+\node[hdr] at (8.25,-0.25) {verdict};
+\foreach \y/\c/\e/\v/\f/\s in {
+  -0.55/{Headline MRR 0.374 on MKG-W}/{0.3691 with the paper's configuration; 0.3605 ± 0.0009 with the run script}/{Approximately}/{yz!70}/{Sec.~IV-A},
+  -1.55/{APKGC beats NativE}/{a retrained NativE scores higher under both checkpoint rules}/{Not reproduced}/{fail!60}/{Sec.~IV-A},
+  -2.55/{Attention penalty adds 0.014 MRR}/{fires in 0 of 300 passes; four implementations give no gain}/{Not reproduced}/{fail!60}/{Sec.~IV-B},
+  -3.55/{Adaptive noise adds 0.016 MRR}/{$\theta_r$ learned to −0.0004; removing noise gives +0.0026 (one seed)}/{Inconclusive}/{gz!45}/{Sec.~IV-C},
+  -4.55/{Noise makes the model robust}/{below NativE in all 30 corruptions; 0.0598 with swapped text}/{Not supported}/{fail!60}/{Sec.~IV-D}} {
+  \node[claim=3.5cm] at (0.3,\y) {\c};
+  \node[ev=3.9cm] at (4.0,\y) {\e};
+  \node[cell=\f] (v) at (9.2,\y+0.08) {\v};
+  \node[sec] at (v.south) {\s};
+  \ifdim\y pt>-4.5pt \draw[black!20, line width=0.4pt] (0.3,\y-0.88) -- (10.0,\y-0.88); \fi}
+% ---------------- ImparTail ----------------
+\draw[zone=yz] (10.6,0.55) rectangle (18.6,-5.55);
+\node[ztl] at (10.9,0.35) {ImparTail (CVPR 2025)};
+\node[hdr] at (10.9,-0.25) {claim of the paper}; \node[hdr] at (13.45,-0.25) {our evidence};
+\node[hdr] at (16.45,-0.25) {verdict};
+\foreach \y/\c/\e/\v/\f/\s in {
+  -0.55/{STTran baseline mean Recall}/{nine values within 0.74 points on average}/{Reproduced}/{pass!80}/{Sec.~VIII-A},
+  -1.75/{Masked labels leave the loss (Eq.~(5))}/{the code turns them into negatives; Eq.~(5) gains (R@50 +9.4, +11.4) are within run noise}/{Code differs}/{yz!70}/{Sec.~VIII-B},
+  -3.15/{STTran mR@20 +51.9\%}/{needs full training of both models over several seeds}/{Not tested}/{gz!45}/{}} {
+  \node[claim=2.3cm] at (10.9,\y) {\c};
+  \node[ev=2.75cm] at (13.45,\y) {\e};
+  \node[cell=\f, minimum width=1.75cm] (v) at (17.35,\y+0.08) {\v};
+  \node[sec] at (v.south) {\s};}
+\draw[black!20, line width=0.4pt] (10.9,-1.5) -- (18.3,-1.5);
+\draw[black!20, line width=0.4pt] (10.9,-2.9) -- (18.3,-2.9);
+% legend in one row below both panels
+\begin{scope}[shift={(2.2,-6.0)}]
+\foreach \x/\f/\t in {0/pass!80/{reproduced}, 3.0/yz!70/{approximately, or code differs}, 7.7/fail!60/{not reproduced, or not supported}, 12.4/gz!45/{inconclusive, or not tested}} {
+  \fill[\f, draw=black, line width=0.6pt] (\x,-0.1) rectangle ++(0.32,0.2);
+  \node[anchor=west, inner sep=0pt, font=\sffamily\scriptsize] at (\x+0.45,0) {\t};}
+\end{scope}
+\end{tikzpicture}

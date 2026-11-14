@@ -1,0 +1,294 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{vietnamese}
+\setotherlanguage{english}
+\setmainfont{Times New Roman}
+\setsansfont{Helvetica Neue}
+\setmonofont{Menlo}[Scale=0.82]
+
+\usepackage[margin=2.4cm,top=2.6cm,bottom=2.4cm]{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{hcmusblue}{HTML}{1B3A5C}
+\definecolor{contextblue}{HTML}{2E86C1}
+\definecolor{codebg}{HTML}{F5F7FA}
+\definecolor{coderule}{HTML}{2E5C8A}
+\definecolor{codetext}{HTML}{A03030}
+
+\titleformat{\section}{\sffamily\large\bfseries\color{hcmusblue}}
+            {\thesection.}{0.6em}{}[\vspace{2pt}\hrule]
+\titleformat{\subsection}{\sffamily\normalsize\bfseries\color{contextblue}}
+            {\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\sffamily\small\bfseries}
+            {\thesubsubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+\setlist[itemize]{leftmargin=1.3em, topsep=3pt, itemsep=2pt}
+\setlist[enumerate]{leftmargin=1.5em, topsep=3pt, itemsep=2pt}
+
+\newcommand{\code}[1]{{\ttfamily\small\color{codetext}#1}}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  backgroundcolor=\color{codebg},
+  frame=leftline, framerule=1.5pt, rulecolor=\color{coderule},
+  framesep=6pt, xleftmargin=8pt,
+  breaklines=true, breakatwhitespace=false,
+  showstringspaces=false, columns=fullflexible,
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\color{gray}APKGC --- Báo cáo chuyên đề}
+\fancyhead[R]{\footnotesize\color{gray}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\begin{document}
+
+\begin{center}
+  {\sffamily\LARGE\bfseries\color{hcmusblue} BÁO CÁO CHUYÊN ĐỀ}\\[8pt]
+  {\sffamily\large\bfseries APKGC: Noise-enhanced Multi-Modal Knowledge Graph\\
+   Completion with Attention Penalty}\\[10pt]
+  {\small Seminar GraphML --- Học phần HP3}\\[2pt]
+  {\small ĐHQG-HCM --- Trường Đại học Khoa học Tự nhiên}
+\end{center}
+
+\vspace{4pt}
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+  \toprule
+  \textbf{Hội nghị} & The 39th AAAI Conference on Artificial Intelligence
+                      (AAAI-25), Oral, tr. 15005--15013\\
+  \textbf{Tác giả}  & Yue Jian, Xiangyu Luo, Zhifei Li, Miao Zhang, Yan Zhang,
+                      Kui Xiao, Xiaoju Hou\\
+                    & Hubei University, Trung Quốc\\
+  \textbf{Mã nguồn} & \texttt{github.com/HubuKG/APKGC}\\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{6pt}
+\section{Dàn ý trình bày --- ImparTail (15 phút)}
+\textbf{Bài báo:} Towards Unbiased and Robust Spatio-Temporal Scene Graph Generation
+
+and Anticipation --- Peddi, Saurabh, Shrivastava, Singla, Gogate. CVPR 2025 (Highlight).
+
+\textbf{Slide:} \code{slides/ImparTail\_Slides.pdf}, 13 trang.
+
+\section{Phân bổ thời gian}
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Slide} & \textbf{Nội dung} & \textbf{Phút} & \textbf{Mốc}\\
+\midrule
+1 & Bìa & 0,5 & 0:30\\
+2 & Scene graph và video & 1,5 & 2:00\\
+3 & Ví dụ đầu vào --- đầu ra & 1,5 & 3:30\\
+4 & Vấn đề đuôi dài & 1,5 & 5:00\\
+5 & \textbf{Ý tưởng: masked loss} & 2,0 & 7:00\\
+6 & Curriculum & 1,5 & 8:30\\
+7 & \textbf{Bộ ba chạy qua mô hình} & 2,0 & 10:30\\
+8 & Kết quả & 1,5 & 12:00\\
+9 & Độ bền & 1,0 & 13:00\\
+10 & \textbf{Đọc phản biện} & 1,5 & 14:30\\
+11 & Ba điều mang về & 0,5 & 15:00\\
+12 & Tài liệu tham khảo & --- & (không nói)\\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Ba slide in đậm là trọng tâm} --- chiếm 5,5/15 phút. Nếu cháy giờ thì rút slide
+
+2 và 9, tuyệt đối không rút ba slide đó.
+
+\section{Nguyên tắc xuyên suốt}
+Đề bài nói rõ: \textbf{hạn chế đọc lại slide}, phải dẫn dắt và phân tích sâu hơn. Mỗi slide dưới đây ghi \textbf{điều KHÔNG có trên slide} mà bạn cần nói thêm.
+
+\section{Slide 2 --- Scene graph và video (1,5 phút)}
+\textbf{Trên slide:} ba khung hình, cùng cặp (người, cốc), vị ngữ đổi *nhìn $\rightarrow$ chạm $\rightarrow$
+
+uống*.
+
+\textbf{Nói thêm:}
+
+> "Lớp mình đã học đồ thị và GNN rồi, nên tôi không nhắc lại. Cái mới ở đây là > đồ thị \textbf{sinh ra từ ảnh}: đỉnh là vật thể phát hiện được, cạnh là quan hệ giữa > chúng."
+
+Rồi chỉ vào ba khung: > "Ba đồ thị này không độc lập. Cùng một cặp vật thể mà quan hệ chuyển dần. Đó > là thứ scene graph tĩnh không diễn tả được, và là lý do bài toán này khó."
+
+\textbf{Đừng} giải thích bộ ba \$(o\_i, p, o\_j)\$ bằng lời --- công thức trên slide đã có
+
+chú thích dưới từng thành phần, chỉ cần chỉ tay.
+
+\section{Slide 3 --- Ví dụ đầu vào, đầu ra (1,5 phút)}
+\textbf{Trên slide:} khung đã quan sát bên trái, khung tương lai bên phải, hai dòng
+
+đầu ra.
+
+\textbf{Nói thêm} --- đây là chỗ người nghe nắm được bài toán, đi chậm:
+
+> "VidSGG nhìn khung nào thì mô tả khung đó --- bài toán nhận dạng. SGA phải sinh > đồ thị cho khung \textbf{chưa nhìn thấy} --- bài toán dự đoán. Cùng bộ máy, nhưng SGA > khó hơn hẳn."
+
+Chỉ vào chuỗi \emph{chạm} rồi \emph{uống}: > "Mô hình phải học được rằng chạm vào cốc thường dẫn tới uống. Đó là tri thức > về diễn tiến, không phải về một khung hình."
+
+\section{Slide 4 --- Vấn đề đuôi dài (1,5 phút)}
+\textbf{Trên slide:} biểu đồ cột, head xanh cao, tail đỏ dẹt.
+
+\textbf{Nói thêm} --- câu quan trọng nhất phần này:
+
+> "Vấn đề không phải là phân phối lệch. Phân phối lệch thì ở đâu cũng có. Vấn đề > là \textbf{lớp hiếm mới là lớp đáng giá}. Biết 'người ở phía trước cái cốc' gần như > vô dụng. Biết 'người đang uống từ cái cốc' mới là hiểu cảnh. Mà mô hình lại > học ngược lại."
+
+Về chỉ số, nói ngắn: > "Recall@K cộng gộp mọi dự đoán nên head lấn át. mean Recall tính từng lớp rồi > trung bình --- mỗi lớp một phiếu."
+
+\section{Slide 5 --- Masked loss (2 phút) --- trọng tâm 1}
+\textbf{Trên slide:} công thức với ba mũi tên chú thích thành phần.
+
+\textbf{Nói thêm} --- giải thích bằng lời trước, ký hiệu sau:
+
+> "\$\textbackslash\{\}mathbf\{m\}\$ là một cái công tắc nhị phân, cho \textbf{từng bộ ba một}. Bật lên thì > mất mát của bộ ba đó bằng không --- nó biến mất khỏi gradient, như thể không tồn > tại trong batch này."
+
+Rồi nhấn chỗ khác biệt --- đây là điều slide không nói: > "Các phương pháp trước đánh trọng số lại, tức là \textbf{giảm tiếng nói} của lớp > head. ImparTail \textbf{tắt hẳn}. Nghe thô, nhưng chính vì thô mà không phải dò > tham số trọng số --- mà dò trọng số mới là chỗ hay bị chê là tinh chỉnh quá tay."
+
+\section{Slide 6 --- Curriculum (1,5 phút)}
+\textbf{Trên slide:} ba biểu đồ, phân phối dịch từ đuôi dài sang đều.
+
+\textbf{Nói thêm:}
+
+> "Tỉ lệ che tăng theo epoch. Đầu buổi mô hình học trên phân phối gốc, càng về > sau càng che nhiều head, đến cuối thì phân phối nhãn còn lại gần như đều."
+
+\textbf{Gieo mầm cho slide 10} --- nói rồi chuyển ngay, đừng giải thích:
+
+> "Ghi nhớ slide này. Cuối bài ta quay lại xem nó có thực sự được dùng không."
+
+\section{Slide 7 --- Bộ ba chạy qua mô hình (2 phút) --- trọng tâm 2}
+\textbf{Trên slide:} bốn khối, dấu ngoặc ghi "forward pass KHÔNG đổi".
+
+\textbf{Nói thêm} --- đi từng bước với ví dụ cụ thể:
+
+> "Khung thứ 12 có người và cái cốc. ORPU và STPU cho ra biểu diễn quan hệ. > Decoder cho phân phối trên các vị ngữ. Đến đây \textbf{mọi thứ giống hệt mô hình > nền} --- ImparTail chưa đụng gì cả."
+
+Rồi chỉ xuống mũi tên đỏ: > "Nhãn thật là \emph{looking\_at}, thuộc lớp head. Mặt nạ bật lên, mất mát bằng không. > Bộ ba này vừa đi hết mô hình rồi \textbf{không đóng góp gì cho việc học}."
+
+Câu chốt: > "Vì chỉ backward đổi nên gắn được lên bất kỳ mô hình nào. Bài báo gắn lên > \textbf{sáu} mô hình nền khác nhau --- đó mới là điểm mạnh thật, không phải con số > trong bảng."
+
+\section{Slide 8 --- Kết quả (1,5 phút)}
+\textbf{Trên slide:} bảng mean Recall, ô xanh là ImparTail.
+
+\textbf{Đừng đọc số.} Nói cách đọc bảng:
+
+> "Mỗi cặp dòng là cùng một mô hình, trước và sau khi gắn ImparTail. So theo cặp, > đừng so chéo."
+
+Rồi: > "Cải thiện ở \textbf{mọi ô}, không ngoại lệ. Từ 12 đến 22 phần trăm."
+
+Nếu bị hỏi vì sao PREDCLS tăng nhiều nhất: vì chế độ đó cho sẵn nhãn vật thể nên phần khó còn lại đúng là phân loại vị ngữ --- chính chỗ ImparTail tác động.
+
+\section{Slide 9 --- Độ bền (1 phút)}
+\textbf{Trên slide:} hai cặp cột, đường gạch nối thể hiện mức tụt.
+
+\textbf{Nói thêm:}
+
+> "Huấn luyện trên dữ liệu sạch, đánh giá trên khung hình đã làm nhiễu --- mô phỏng > đúng cảnh triển khai thật. Cả hai đều tụt, đó là bình thường. Điều đáng nói là > ImparTail tụt 8 điểm còn mô hình nền tụt 14. Và điểm \textbf{sau khi nhiễu} của nó > vẫn cao hơn điểm \textbf{sạch} của mô hình nền."
+
+Cơ chế, một câu: > "Cân bằng phân phối làm mô hình không quá khớp vào mẫu hình phổ biến --- giống > tác dụng của dropout."
+
+\section{Slide 10 --- Đọc phản biện (1,5 phút) --- trọng tâm 3}
+\textbf{Trên slide:} trích nguyên văn Remark, ba khối bằng chứng.
+
+Nhắc lại slide 6 trước: > "Nhớ curriculum chứ. Giờ ta kiểm."
+
+Đọc to đoạn trích, rồi chỉ ba khối: > "Bài báo nói dùng tỉ lệ cố định. Mã nguồn đặt \code{is\_curriculum = False} làm mặc > định. Và không script chạy nào trong kho gọi biến thể curriculum. Ba nguồn độc > lập, cùng một kết luận."
+
+\textbf{Phát biểu cẩn thận} --- đây là chỗ dễ nói quá:
+
+> "Tôi chỉ đang mô tả bài báo và mã đã công bố. Không kết luận tác giả có chạy > curriculum hay không --- rất có thể họ có chạy mà chỉ không đưa vào bản phát > hành."
+
+Câu để lại: > "Nhưng nếu tỉ lệ cố định cho kết quả tương đương, thì đóng góp thật nằm ở > curriculum hay chỉ ở việc che? Bài báo chưa tách được hai thứ đó."
+
+\section{Slide 11 --- Nhóm chạy lại được (0,5 phút)}
+Nói ngắn, để bảng tự nói:
+
+> "Nhóm chạy lại toàn bộ 1.750 video tập test, chế độ PredCls, dùng chính > checkpoint tác giả phát hành. Chín con số mean Recall lệch trung bình > \textbf{0,74 điểm} so với Bảng 1."
+
+Nếu bị hỏi \emph{"sao không chạy bản có phương pháp?"} --- trả lời thẳng: chưa chạy. Cái đã xác nhận là \textbf{pipeline đánh giá, dữ liệu và checkpoint tái lập đúng}, không phải phương pháp đúng.
+
+Không đọc từng con số trong bảng. Chỉ vào cột mR@20 hàng With rồi nói "34,7 so với 35,5" là đủ.
+
+\section{Slide 12 --- Ba điều mang về (0,5 phút)}
+Đọc lướt, mỗi ý một câu. Không giải thích thêm --- hết giờ.
+
+\section{Câu hỏi có thể bị hỏi}
+\textbf{Che 90\% nhãn thì còn gì để học?}
+
+Che theo \textbf{bộ ba}, không theo mẫu. Một khung có nhiều cặp vật thể; che hết cặp head vẫn còn cặp tail. Mất mát phân loại vật thể cũng không bị che.
+
+\textbf{Khác gì focal loss?}
+
+Focal loss giảm trọng số theo \textbf{độ tin cậy dự đoán}, liên tục và tự động. ImparTail che theo \textbf{lớp}, nhị phân, theo lịch định trước. Bài báo \textbf{không so trực tiếp với focal loss} --- đó là một thiếu sót.
+
+\textbf{Cải thiện có nằm trong nhiễu ngẫu nhiên không?}
+
+Không kiểm chứng được --- bài báo \textbf{không báo cáo độ lệch chuẩn}, không nói chạy mấy seed. Với mức 12--22\% thì khả năng là thật, nhưng đúng ra phải có nhiều seed.
+
+\textbf{Nhóm có chạy lại không?}
+
+Nhóm đã \textbf{thử thật trên Kaggle} và ghi lại chặn ở đâu, thay vì phỏng đoán.
+
+Ba thứ tưởng là rào cản hoá ra không phải:
+
+\begin{itemize}\itemsep2pt
+\item \textbf{Dữ liệu}: Kaggle có sẵn \code{action-genome} (annotation) và
+\end{itemize}
+\code{action-genome-frames-part-1..6} --- video \textbf{đã tách khung sẵn}, đúng cấu trúc \code{<video>.mp4/<frame>.png} mà mã cần. Không phải tải video, không phải tách. Phải gắn \textbf{đủ cả 6 part} (\textasciitilde{}58 GB): lần đầu chỉ gắn 2 part, được 3.200 thư mục video nghe như thừa so với 1.814 video của tập test, nhưng đó là video \textbf{ngẫu nhiên trên toàn tập} --- thiếu 1.224/1.814 video test, và chạy được 553/1.750 video thì dừng.
+
+\begin{itemize}\itemsep2pt
+\item \textbf{\code{draw\_rectangles}} (Cython): \code{build\_ext} xong trong 3 giây.
+\item \textbf{Checkpoint}: tải được từ UT Dallas Box --- 3 tệp, 1,1 GB, đúng định dạng
+\end{itemize}
+\code{sttran\_state\_dict} và \code{faster\_rcnn}.
+
+\textbf{Rào cản kỹ thuật đã gỡ được hết.} Biên dịch CUDA extension từng là chỗ chặn:
+
+mã viết cho torch 1.x, Kaggle cấp Tesla P100 (sm\_60) mà torch cài sẵn 2.10 chỉ hỗ trợ từ sm\_70. Hạ xuống 2.4.1+cu121 rồi vá \textbf{51 chỗ dùng API đã bỏ} (\code{.type()}, \code{.data<T>()}, header \code{THC/THC.h}) thì biên dịch sạch, \code{exit 0}, và \code{nms} import được.
+
+\textbf{Một trục trặc khi dựng môi trường:} ba tệp test đều
+
+\code{from analysis.results import Result, ResultDetails, Metrics}. Lần clone đầu nhóm dùng \code{--filter=blob:none} nên thiếu nội dung tệp và tưởng thư mục \code{analysis/} không được commit. Kiểm lại trực tiếp trên GitHub thì \textbf{thư mục có đủ 22 tệp Python}, cả \code{Result.py} lẫn \code{FirebaseService.py}. Đây là lỗi thao tác của nhóm, không phải thiếu sót của tác giả.
+
+Phát biểu thận trọng --- mọi nhận định ở đây là mô tả \textbf{kho mã đã công bố}, không kết luận tác giả chạy thí nghiệm thế nào.
+
+\textbf{Và chạy xong thật.} Toàn bộ 1.750 video tập test, chế độ PredCls, checkpoint
+
+\code{sttran\_predcls} do tác giả phát hành, khoảng 1 giờ trên Tesla P100. Chín con số mean Recall khớp Bảng 1 của bài báo:
+
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{ràng buộc} & \textbf{mR@10} & \textbf{mR@20} & \textbf{mR@50}\\
+\midrule
+With & 30,5 $\rightarrow$ \textbf{30,7} & 34,7 $\rightarrow$ \textbf{35,5} & 34,8 $\rightarrow$ \textbf{35,6}\\
+No & 45,7 $\rightarrow$ \textbf{44,3} & 63,4 $\rightarrow$ \textbf{63,8} & 80,5 $\rightarrow$ \textbf{80,7}\\
+Semi & 36,6 $\rightarrow$ \textbf{36,2} & 51,8 $\rightarrow$ \textbf{52,7} & 53,8 $\rightarrow$ \textbf{55,3}\\
+\bottomrule
+\end{tabular}
+\end{center}
+Lệch trung bình \textbf{0,74 điểm}, lớn nhất 1,52. Đây là con số của mô hình \textbf{nền} STTran, không phải bản +ImparTail --- nhóm chưa chạy bản có phương pháp. Nhưng nó xác nhận được điều cần xác nhận: pipeline đánh giá, dữ liệu và checkpoint của tác giả tái lập đúng. Để so sánh, mức cải thiện mà bài báo công bố cho +ImparTail trung bình \textbf{16,6 điểm} --- gấp 22 lần sai số tái lập này, nên sai số đó không đe doạ kết luận của bài báo.
+
+Điểm cộng của repo: giấy phép Apache 2.0 rõ ràng, có phát hành checkpoint --- khá hơn nhiều repo cùng lĩnh vực.
+
+\textbf{Gắn được lên mô hình mới hơn không?}
+
+Về nguyên tắc có, miễn mô hình dùng pipeline biểu diễn hướng-đối-tượng và có một số hạng mất mát phân loại vị ngữ tách rời.
+
+\textbf{Vì sao chỉ Action Genome?}
+
+Đây là bộ chuẩn de-facto cho VidSGG và SGA. Nhưng chỉ một bộ dữ liệu cũng là điểm yếu --- không biết kết quả có chuyển sang bộ khác không.
+
+\end{document}

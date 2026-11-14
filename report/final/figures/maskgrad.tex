@@ -1,0 +1,31 @@
+% Figure: what each mask treatment does to the predicted probability q of a relation that is
+% truly present (Section VIII-B). BCE gradient w.r.t. the logit is q - y.
+% Message: Eq. (5) removes a masked label (no push); the released code labels it 0 and pushes q
+% down. The bar height q = 0.4 is illustrative; p_c = 0.016 for holding is from Algorithm 1 on
+% Action Genome (experiments/tools/masked_bce_bias.py).
+\begin{tikzpicture}[x=1cm, y=1cm, font=\sffamily\scriptsize,
+  zone/.style={rounded corners=10pt, fill=#1!13, draw=#1!75!black, line width=1pt, dash pattern=on 4.5pt off 3pt},
+  ztl/.style={font=\sffamily\scriptsize\bfseries, anchor=north west, inner sep=0pt},
+  ttl/.style={font=\sffamily\scriptsize\bfseries, align=center, anchor=south, inner sep=1pt},
+  note/.style={font=\sffamily\scriptsize, align=center, anchor=north, inner sep=1pt},
+  push/.style={-{Latex[length=2.2mm, width=1.8mm]}, line width=1.6pt}]
+\draw[zone=bz] (0,0) rectangle (5.5,3.6);
+\node[ztl] at (0.2,3.43) {As Eq.~(5) states};
+\draw[zone=yz] (5.85,0) rectangle (8.85,3.6);
+\node[ztl] at (6.05,3.43) {Released code};
+% one probability bar per case: x centre / title / arrow (1 up, 0 none, -1 down) / note
+\foreach \x/\t/\d/\n in {1.45/{unmasked\\($y=1$)}/1/{$q-1<0$:\\pushes $q$ up},
+                         4.05/{masked\\(removed)}/0/{no contribution},
+                         7.35/{masked\\(labelled $y=0$)}/-1/{$q>0$:\\pushes $q$ \textbf{down}}} {
+  \node[ttl] at (\x,2.3) {\t};
+  \draw[black!60, line width=0.7pt, fill=white] (\x-0.28,0.85) rectangle (\x+0.28,2.05);
+  \fill[db!70] (\x-0.28,0.85) rectangle (\x+0.28,1.33);
+  \node[font=\sffamily\scriptsize, anchor=east, text=black!60] at (\x-0.32,1.09) {$q$};
+  \ifnum\d=1 \draw[push, draw=db] (\x+0.55,1.05) -- (\x+0.55,1.85); \fi
+  \ifnum\d=-1 \draw[push, draw=fail!90!black] (\x+0.55,1.85) -- (\x+0.55,1.05); \fi
+  \ifnum\d=0 \node[font=\sffamily\small, text=black!50] at (\x+0.55,1.45) {0}; \fi
+  \node[note] at (\x,0.78) {\n};}
+% consequence for the most frequent class
+\node[font=\sffamily\scriptsize, anchor=north west, align=left, inner sep=0pt] at (0,-0.2)
+  {Worst case (the pair keeps another label of its group): a class kept with probability\\$p_c$ gets $q-p_c$ instead of $q-1$. \emph{holding}: $p_c=0.016$, reversing once $q>0.016$.};
+\end{tikzpicture}

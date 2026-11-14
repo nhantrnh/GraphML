@@ -1,0 +1,22 @@
+{
+  "apkgc-repro": {
+    "mkgw-seed1234": "https://wandb.ai/nhantrnh-graphml/apkgc-repro/runs/1uqw3vr3",
+    "mkgw-seed2024": "https://wandb.ai/nhantrnh-graphml/apkgc-repro/runs/ab5t6ewn",
+    "mkgw-seed3407": "https://wandb.ai/nhantrnh-graphml/apkgc-repro/runs/n3gnlcgb",
+    "mkgw-paper-config": "https://wandb.ai/nhantrnh-graphml/apkgc-repro/runs/8imed444",
+    "mkgw-seed42": "https://wandb.ai/nhantrnh-graphml/apkgc-repro/runs/ehi5u79z",
+    "db15k-seed42-cap600": "https://wandb.ai/nhantrnh-graphml/apkgc-repro/runs/y41uo30v",
+    "mkgw-B2-cap05": "https://wandb.ai/nhantrnh-graphml/apkgc-repro/runs/6o5rs8sj",
+    "mkgw-penalty-A": "https://wandb.ai/nhantrnh-graphml/apkgc-repro/runs/5mubzabz",
+    "mkgw-penalty-B": "https://wandb.ai/nhantrnh-graphml/apkgc-repro/runs/n1z4asjp",
+    "mkgw-penalty-C": "https://wandb.ai/nhantrnh-graphml/apkgc-repro/runs/5f540xf2",
+    "mkgw-no-noise": "https://wandb.ai/nhantrnh-graphml/apkgc-repro/runs/2n68eify",
+    "mkgw-attn-probe": "https://wandb.ai/nhantrnh-graphml/apkgc-repro/runs/474c5kcn",
+    "mkgw-learned-ratios": "https://wandb.ai/nhantrnh-graphml/apkgc-repro/runs/xhepf56j"
+  },
+  "impartail-repro": {
+    "sttran-predcls-eval": "https://wandb.ai/nhantrnh-graphml/impartail-repro/runs/emvvqpr2",
+    "sttran-train-original": "https://wandb.ai/nhantrnh-graphml/impartail-repro/runs/7ok1vx4f",
+    "sttran-train-patched": "https://wandb.ai/nhantrnh-graphml/impartail-repro/runs/4h2scw2u"
+  }
+}

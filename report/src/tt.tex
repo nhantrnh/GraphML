@@ -1,0 +1,393 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{vietnamese}
+\setotherlanguage{english}
+\setmainfont{Times New Roman}
+\setsansfont{Helvetica Neue}
+\setmonofont{Menlo}[Scale=0.82]
+
+\usepackage[margin=2.4cm,top=2.6cm,bottom=2.4cm]{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{hcmusblue}{HTML}{1B3A5C}
+\definecolor{contextblue}{HTML}{2E86C1}
+\definecolor{codebg}{HTML}{F5F7FA}
+\definecolor{coderule}{HTML}{2E5C8A}
+\definecolor{codetext}{HTML}{A03030}
+
+\titleformat{\section}{\sffamily\large\bfseries\color{hcmusblue}}
+            {\thesection.}{0.6em}{}[\vspace{2pt}\hrule]
+\titleformat{\subsection}{\sffamily\normalsize\bfseries\color{contextblue}}
+            {\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\sffamily\small\bfseries}
+            {\thesubsubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+\setlist[itemize]{leftmargin=1.3em, topsep=3pt, itemsep=2pt}
+\setlist[enumerate]{leftmargin=1.5em, topsep=3pt, itemsep=2pt}
+
+\newcommand{\code}[1]{{\ttfamily\small\color{codetext}#1}}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  backgroundcolor=\color{codebg},
+  frame=leftline, framerule=1.5pt, rulecolor=\color{coderule},
+  framesep=6pt, xleftmargin=8pt,
+  breaklines=true, breakatwhitespace=false,
+  showstringspaces=false, columns=fullflexible,
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\color{gray}APKGC --- Báo cáo chuyên đề}
+\fancyhead[R]{\footnotesize\color{gray}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\begin{document}
+
+\begin{center}
+  {\sffamily\LARGE\bfseries\color{hcmusblue} BÁO CÁO CHUYÊN ĐỀ}\\[8pt]
+  {\sffamily\large\bfseries APKGC: Noise-enhanced Multi-Modal Knowledge Graph\\
+   Completion with Attention Penalty}\\[10pt]
+  {\small Seminar GraphML --- Học phần HP3}\\[2pt]
+  {\small ĐHQG-HCM --- Trường Đại học Khoa học Tự nhiên}
+\end{center}
+
+\vspace{4pt}
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+  \toprule
+  \textbf{Hội nghị} & The 39th AAAI Conference on Artificial Intelligence
+                      (AAAI-25), Oral, tr. 15005--15013\\
+  \textbf{Tác giả}  & Yue Jian, Xiangyu Luo, Zhifei Li, Miao Zhang, Yan Zhang,
+                      Kui Xiao, Xiaoju Hou\\
+                    & Hubei University, Trung Quốc\\
+  \textbf{Mã nguồn} & \texttt{github.com/HubuKG/APKGC}\\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{6pt}
+\section{Trạng thái thực nghiệm --- APKGC}
+Ghi lại chính xác những gì nhóm đã chạy, chưa chạy, và mức độ tin cậy của từng kết quả. Cập nhật: 20/8/2026.
+
+Nguyên tắc: mọi số trong cột "đã đo" đều do nhóm tự chạy và có log kiểm chứng được. Số của tác giả luôn ghi rõ nguồn là bảng nào, trang nào.
+
+\section{Phần 1 --- Đã chạy, có số liệu}
+\subsection{Huấn luyện lại APKGC trên MKG-W}
+Năm lần chạy chia hai đợt với \textbf{điều kiện khác nhau}, phải báo cáo tách biệt:
+
+\begin{center}\small
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+\textbf{Đợt} & \textbf{Seed} & \textbf{Epoch} & \textbf{Đánh giá mỗi} & \textbf{MRR} & \textbf{Hits@1} & \textbf{Hits@3} & \textbf{Hits@10}\\
+\midrule
+1 & 7 & 8000 & 100 & 0,3616 & 0,2942 & 0,3918 & 0,4853\\
+1 & 42 & 8000 & 100 & 0,3641 & 0,2956 & 0,3954 & 0,4840\\
+2 & 1234 & 2000 & 250 & 0,3610 & 0,2987 & 0,3864 & 0,4759\\
+2 & 2024 & 2000 & 250 & 0,3611 & 0,2943 & 0,3907 & 0,4819\\
+2 & 3407 & 2000 & 250 & 0,3595 & 0,2925 & 0,3917 & 0,4799\\
+\bottomrule
+\end{tabular}
+\end{center}
+Trung bình đợt 1 (n=2): MRR 0,3629 Trung bình đợt 2 (n=3): MRR \$0\{,\}3605 \textbackslash\{\}pm 0\{,\}0009\$
+
+\textbf{Ước lượng độ lệch chuẩn lấy từ đợt hai}, vì đây là ba lần chạy duy nhất cùng
+
+điều kiện. Gộp cả năm lần cho 0,0017, nhưng con số đó trộn lẫn nhiễu seed với chênh lệch 0,0023 giữa hai đợt --- vốn đến từ khác biệt về số epoch và tần suất đánh giá.
+
+Số công bố trong bài báo (Bảng 2, tr. 15010): MRR 0,374 · H@1 0,306 · H@3 0,404 · H@10 0,501
+
+\textbf{Thiết lập.} Kaggle, GPU Tesla P100, torch 2.4.1. Siêu tham số đọc trực tiếp
+
+từ \code{scripts/run\_base.sh} của tác giả: \code{dim=128}, \code{batch=1024}, \code{margin=12}, \code{neg\_num=32}, \code{lr=1e-4}, \code{epoch=8000}, early stopping sau 10 lần đánh giá không cải thiện. Chỉ thay đổi tham số \code{-seed}.
+
+\textbf{Mức độ tin cậy: cao.} Chạy mã gốc, dữ liệu gốc, GPU thật. Log lưu tại
+
+\code{results/MKG-W\_seed7.log} chứa thanh tiến trình tqdm kèm dấu thời gian, cảnh báo của PyTorch, và phần in ra từ thư viện C++ \code{Base.so} theo đúng định dạng của \code{Test.h}:
+
+\begin{lstlisting}
+averaged(filter):  0.210617   951.168030   0.321947   0.229293   0.151614
+Epoch 1499 | loss: 0.517856:  19%|█▊  | 1499/8000 [2:37:24<11:22:38, 6.30s/it]
+INFO - 08/20/26 08:42:20 - 2:39:12 - mrr:0.3615906536579132, ...
+\end{lstlisting}
+\subsection{b Thí nghiệm tách nguyên nhân: cấu hình bài báo}
+Chạy thêm một lần với \code{batch = 2048}, \code{neg\_num = 64} (đúng tr. 15010), seed 42.
+
+Lần chạy này dùng trần 2000 epoch, đánh giá mỗi 250 --- \textbf{cùng điều kiện đợt hai}, nên đối chứng là đợt hai chứ không phải trung bình gộp.
+
+\begin{center}\small
+\begin{tabular}{@{}lrrrl@{}}
+\toprule
+\textbf{Chỉ số} & \textbf{Đợt 2 (1024/32)} & \textbf{Bài báo (2048/64)} & \textbf{Công bố} & \textbf{Thu hẹp}\\
+\midrule
+MRR & 0,3605 & 0,3691 & 0,3740 & 64\%\\
+Hits@1 & 0,2952 & 0,3028 & 0,3060 & 70\%\\
+Hits@3 & 0,3896 & 0,3997 & 0,4040 & 70\%\\
+Hits@10 & 0,4792 & 0,4874 & 0,5010 & 37\%\\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Mức độ tin cậy: cao} về mặt số liệu (chạy thật, log kiểm chứng được), nhưng
+
+\textbf{chỉ một seed} nên chưa có độ lệch chuẩn riêng cho cấu hình này.
+
+Kết luận: giả thuyết cấu hình lệch được xác nhận --- chạy đúng cấu hình ghi trong bài báo thu hẹp 64\% khoảng lệch MRR. Riêng cấu hình đóng góp +0,0086 MRR, gấp gần mười lần độ lệch chuẩn giữa các seed. Phần còn lại 0,0049 MRR chưa giải thích được.
+
+\subsection{Audit tham số trên mô hình thật}
+Chạy \code{audit\_apkgc\_real.py} --- nạp lớp \code{APKGC} từ repo gốc, dùng \textbf{bộ nhúng thật} của MKG-W (visual 383-d, textual 384-d), chạy 5 lượt forward/backward.
+
+\begin{lstlisting}
+Tổng số tham số      : 37
+Học được bình thường : 17
+Đóng băng có chủ ý   :  7
+Không nhận gradient  : 13
+\end{lstlisting}
+Mười ba tham số không nhận gradient chia ba nhóm:
+
+\textbf{Nhóm một --- lỗi thực sự (1 tham số).} \code{noise\_ratio} khai báo \code{nn.Parameter}
+
+giống hệt \code{mask\_ratio} ở dòng liền kề, nhưng chỉ tham gia phép so sánh \code{torch.rand(n) < self.noise\_ratio} nên không có đường gradient; \code{mask\_ratio} tham gia phép nhân nên học được. Bài báo mô tả tham số này là \emph{"adaptively tuned during the training process"} (Eq. 5).
+
+\textbf{Nhóm hai --- nhánh không kích hoạt (8 tham số).} \code{weight\_raw}, \code{comb\_proj},
+
+\code{ent\_attn}, \code{img\_proj\_2}, \code{text\_proj\_2} --- thuộc các cấu hình mà \code{run.sh} không dùng tới.
+
+\textbf{Nhóm ba --- lớp con không chạy (4 tham số).} Khối feed-forward của
+
+\code{fusion\_layer}. Với \code{use\_intermediate=0} (giá trị dùng cho cả hai bộ dữ liệu), \code{BertLayer.forward} thoát ngay sau attention.
+
+\textbf{Mức độ tin cậy: cao.} Mã gốc, dữ liệu gốc. Ban đầu chạy với vector ngẫu nhiên
+
+rồi chạy lại với bộ nhúng thật --- kết quả trùng khớp, đúng như dự đoán vì đường đi của gradient do cấu trúc mã quyết định.
+
+Tái lập: \code{python audit\_apkgc\_real.py --repo <APKGC> --dataset MKG-W}
+
+\subsection{Audit tĩnh năm repo MMKGC}
+Chạy \code{audit\_static.py} --- phân tích cây cú pháp, không cần cài đặt gì.
+
+\begin{center}\small
+\begin{tabular}{@{}lrrlrr@{}}
+\toprule
+\textbf{Repo} & \textbf{Tổng \code{nn.Parameter}} & \textbf{Có gradient} & \textbf{Nghi vấn} & \textbf{Không thấy dùng} & \textbf{Đóng băng}\\
+\midrule
+APKGC & 17 & 1 & \textbf{1} & 1 & 14\\
+AdaMF-MAT & 41 & 5 & 0 & 0 & 36\\
+MyGO & 29 & 14 & 0 & 15 & 0\\
+MoMoK & 11 & 5 & 1\textbackslash\{\}* & 5 & 0\\
+DHNS & 14 & 0 & 0 & 0 & 14\\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbackslash\{\}* Kiểm tra thủ công cho thấy đây là báo nhầm: \code{models/GAT.py} không nằm trên đường chạy chính của MoMoK.
+
+\textbf{Kết luận sau khi loại báo nhầm: chỉ một trường hợp thực sự}, ở APKGC. Hiện
+
+tượng này \textbf{không phổ biến} trong lĩnh vực như giả thuyết ban đầu của nhóm.
+
+\textbf{Mức độ tin cậy: trung bình.} Phân tích tĩnh không theo được luồng gọi hàm
+
+giữa các tệp nên có thể bỏ sót hoặc báo nhầm; mọi trường hợp phát hiện cần xác minh bằng audit động.
+
+\subsection{Đo chi phí tính toán}
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Khâu} & \textbf{Thời gian} & \textbf{Cách đo}\\
+\midrule
+Huấn luyện & 8,4 giây mỗi epoch & MPS, đo trực tiếp\\
+Đánh giá & 21,3 phút mỗi lần & 40 bước đầu rồi ngoại suy cho 4.274 bước\\
+\bottomrule
+\end{tabular}
+\end{center}
+\code{run\_link\_prediction} xếp hạng tuần tự 4.274 bộ ba kiểm thử theo hai chiều, mỗi lần trên 15.000 thực thể, không gộp lô. Với cấu hình gốc (8000 epoch, đánh giá mỗi 100), riêng khâu đánh giá cần khoảng 28 giờ nếu chạy hết.
+
+\textbf{Mức độ tin cậy: cao} cho phần huấn luyện (đo trực tiếp), \textbf{trung bình} cho
+
+phần đánh giá (ngoại suy từ 40 bước đầu).
+
+\subsection{Số chiều đặc trưng}
+Đọc trực tiếp từ tệp \code{.pth} tải về từ Google Drive của tác giả AdaMF-MAT:
+
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Tệp} & \textbf{Kích thước tensor} & \textbf{Dung lượng}\\
+\midrule
+DB15K-visual.pth & (12842, 4096) & 200 MB\\
+DB15K-textual.pth & (12842, 768) & 37 MB\\
+MKG-W-visual.pth & (15000, 383) & 21 MB\\
+MKG-W-textual.pth & (15000, 384) & 21 MB\\
+MKG-Y-visual.pth & (15000, 383) & 21 MB\\
+MKG-Y-textual.pth & (15000, 384) & 21 MB\\
+\bottomrule
+\end{tabular}
+\end{center}
+Chênh lệch giữa DB15K và hai bộ còn lại là hơn mười lần về số chiều thị giác, bắt nguồn từ việc dùng encoder khác nhau (VGG cho DB15K, BEiT cho MKG-W và MKG-Y --- AdaMF-MAT nói rõ điều này trong bài).
+
+\textbf{Mức độ tin cậy: cao.} Đọc trực tiếp từ tệp.
+
+\subsection{Kiểm chứng cơ chế Concrete relaxation}
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Biến thể} & \textbf{Nhận gradient} & \textbf{Sau 300 bước}\\
+\midrule
+Bernoulli cố định (như bản gốc) & không & 0,2000 $\rightarrow$ 0,2000\\
+Concrete relaxation & có & 0,2000 $\rightarrow$ 0,0919\\
+Straight-through & có & 0,2000 $\rightarrow$ 0,0909\\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Mức độ tin cậy: thấp hơn các mục trên.} Đây là \textbf{mô phỏng cơ chế} trong một
+
+module độc lập (\code{concrete\_noise.py}), \textbf{không phải} sửa trực tiếp mã APKGC rồi huấn luyện lại. Nó chứng minh kỹ thuật khả thi về mặt gradient, nhưng chưa cho biết hiệu quả thực tế trên bài toán.
+
+\subsection{Kiểm chứng tái lập (26/08/2026) ✅}
+Chạy lại seed 42 với đúng cấu hình đợt một, phiên Kaggle độc lập, sau sáu ngày.
+
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Chỉ số} & \textbf{20/08} & \textbf{26/08} & \textbf{Lệch}\\
+\midrule
+MRR & 0,3641 & 0,3641 & +0,00001\\
+Hits@1 & 0,2956 & 0,2956 & +0,00002\\
+Hits@3 & 0,3954 & 0,3954 & +0,00001\\
+Hits@10 & 0,4840 & 0,4840 & −0,00003\\
+Thời gian & 158 phút & 159 phút & \\
+\bottomrule
+\end{tabular}
+\end{center}
+Cả hai lần dừng sớm ở \textbf{epoch 1499} sau 15 lần đánh giá (14 lần giữa chừng cộng một lần cuối trên checkpoint tốt nhất), dù trần đặt 8000.
+
+\textbf{Hai hệ quả.} Thứ nhất, mọi con số trong báo cáo tái lập được --- không phải kết
+
+quả một lần chạy may mắn. Thứ hai, độ lệch 0,0135 MRR so với số công bố không đến từ dao động khi chạy, vì dao động đó \textbf{bằng không}; nguyên nhân phải nằm ở cấu hình, phần cứng, hoặc phiên bản thư viện.
+
+Điều này cũng cho thấy trần 8000 epoch trong \code{scripts/run\_base.sh} \textbf{không bao giờ được chạm tới} với cấu hình mặc định --- early stopping cắt ở khoảng một phần năm. Thí nghiệm "chạy đủ 8000 epoch" vì thế không còn ý nghĩa và đã được gỡ khỏi danh sách chưa chạy.
+
+Nhật ký: \code{kaggle\_results/apkgc\_res3/seed42.log} · kernel \code{nhantrnh/apkgc-remaining-exp}
+
+\section{Phần 2 --- Chưa chạy}
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Thí nghiệm} & \textbf{Ước tính} & \textbf{Ghi chú}\\
+\midrule
+Nhiều seed với cấu hình bài báo & \textasciitilde{}15 giờ & Hiện chỉ có một seed cho cấu hình 2048/64\\
+Ablation tự chạy (bỏ noise, đổi fusion) & \textasciitilde{}6 giờ & Xác minh Bảng 4 của tác giả\\
+Bộ dữ liệu DB15K & \textasciitilde{}4 giờ & Chưa chạy tập nào ngoài MKG-W\\
+Bộ dữ liệu MKG-Y & \textasciitilde{}4 giờ & Bài báo không dùng, nhưng đáng chạy để kiểm tra tổng quát hoá\\
+Quét siêu tham số (Hình 3) & rất lâu & 16 cấu hình $\times$ 2,6 giờ, vượt xa quota một tuần\\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Về quota Kaggle.} Giới hạn 30 giờ mỗi tuần. Một lần chạy gộp cả năm seed
+
+trong một kernel bị cắt ở mốc 12 giờ mà chưa xong seed đầu tiên. Bài học: tách mỗi seed một kernel ngay từ đầu.
+
+\textbf{Về tính đồng nhất điều kiện.} Vì phải rút ngắn epoch cho vừa phiên Kaggle, ba
+
+seed đợt hai chạy khác điều kiện với hai seed đợt một. Ban đầu nhóm gộp cả năm vào một mẫu và báo cáo độ lệch chuẩn 0,0017; rà soát lại cho thấy con số đó trộn lẫn nhiễu seed với chênh lệch giữa hai đợt. Đã sửa thành báo cáo tách biệt. Bài học: cố định toàn bộ điều kiện trước khi bắt đầu, đừng đổi giữa chừng.
+
+\section{Phần 3 --- Số nào là của tác giả}
+Để tránh nhầm lẫn, đây là những bảng trong slide và báo cáo lấy từ bài báo, nhóm \textbf{chưa} tự đo lại:
+
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Nội dung} & \textbf{Nguồn}\\
+\midrule
+Bảng so sánh 19 mô hình nền & Bảng 2, tr. 15010\\
+Ablation theo mô thái & Bảng 3, tr. 15010\\
+Ablation theo thành phần & Bảng 4, tr. 15011\\
+Quét siêu tham số \$k\$ và \$\textbackslash\{\}theta\_p\$ & Hình 3, tr. 15011\\
+Nghiên cứu trường hợp Dennis Hopper & Hình 4, tr. 15011\\
+\bottomrule
+\end{tabular}
+\end{center}
+Slide và báo cáo đều ghi rõ nguồn cho từng bảng.
+
+\section{Phần 4 --- Câu hỏi mở}
+\textbf{Khoảng lệch so với số công bố đến từ đâu? --- đã trả lời một phần.}
+
+Thí nghiệm tách nguyên nhân (mục 1.1b) xác nhận: \textbf{cấu hình không khớp là nguyên nhân chính}, chiếm 64\% khoảng lệch MRR và 70\% ở Hits@1 lẫn Hits@3.
+
+Còn lại 0,0049 MRR chưa giải thích được, vẫn gấp khoảng ba lần độ lệch chuẩn giữa các seed. Ba nguyên nhân chưa tách:
+
+\begin{enumerate}\itemsep2pt
+\item \textbf{Phần cứng.} Bài báo dùng RTX 4090, nhóm dùng Tesla P100.
+\item \textbf{Phiên bản thư viện.} Phải hạ xuống torch 2.4.1 vì bản mặc định trên Kaggle
+\end{enumerate}
+không hỗ trợ kiến trúc sm\_60.
+
+\begin{enumerate}\itemsep2pt
+\item \textbf{Số epoch bị giới hạn.} Chạy 2000 epoch với đánh giá mỗi 250, thay vì 8000
+\end{enumerate}
+và 100 như script gốc.
+
+Đáng chú ý: Hits@10 chỉ thu hẹp 37\%, thấp hơn hẳn ba chỉ số còn lại --- gợi ý phần lệch còn lại ảnh hưởng tới đuôi phân phối xếp hạng nhiều hơn phần đầu.
+
+\section{Phần 5 --- Giới hạn diễn giải}
+Mọi quan sát trong tài liệu này nói về \textbf{những gì được công bố trong kho mã và bài báo}, trên phần cứng và phiên bản thư viện cụ thể mà nhóm dùng.
+
+Không thể suy ra từ đây rằng tác giả chỉ chạy một cấu hình, hay chưa từng đo độ lệch chuẩn. Nhóm nghiên cứu hoàn toàn có thể đã thử nhiều seed và nhiều cấu hình rồi chỉ công bố một script.
+
+Phát biểu kiểm chứng được: \emph{bài báo không báo cáo độ lệch chuẩn}, và \emph{mã nguồn công bố có những đặc điểm khiến người ngoài khó chạy lại}. Đây là vấn đề về cách báo cáo và chia sẻ, không phải kết luận về phương pháp nghiên cứu của tác giả.
+
+\section{Phụ lục --- Danh sách tệp}
+\textbf{Mã kiểm thử}
+
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Tệp} & \textbf{Chức năng}\\
+\midrule
+\code{audit\_gradient.py} & Bộ khung audit tham số, dùng chung\\
+\code{audit\_apkgc\_real.py} & Chạy audit trên mô hình APKGC thật\\
+\code{audit\_static.py} & Phân tích tĩnh, chạy được trên mọi repo\\
+\code{concrete\_noise.py} & Mô phỏng ba biến thể lấy mẫu nhiễu\\
+\code{pilot\_seed\_study.py} & Chạy nhiều seed cho AdaMF-MAT (chưa dùng tới)\\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Notebook}
+
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Tệp} & \textbf{Chức năng}\\
+\midrule
+\code{kaggle\_apkgc\_seeds.ipynb} & Chạy nhiều seed, đã dùng cho seed 42 và 7\\
+\code{kaggle\_remaining\_exp.ipynb} & Các thí nghiệm còn lại, có công tắc chọn phần chạy\\
+\code{APKGC\_Colab.ipynb} & Bản cho Google Colab\\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Kết quả và tài liệu}
+
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Tệp} & \textbf{Nội dung}\\
+\midrule
+\code{seed\_results.md} & Kết quả hai seed kèm phân tích\\
+\code{audit\_result.md} & Kết quả audit đầy đủ, phân loại ba nhóm\\
+\code{audit\_5repos.md} & So sánh năm repo\\
+\code{repo\_audit.md} & Khảo sát mã nguồn năm phương pháp\\
+\code{published\_gaps.json} & Khoảng cách trong bài báo, có ghi nguồn từng số\\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{document}

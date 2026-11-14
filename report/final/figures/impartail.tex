@@ -1,0 +1,27 @@
+% Figure: ImparTail as described in the paper (Section VI-B).
+% Message: the baseline is unchanged; ImparTail only decides which labels enter the loss, so the
+% gradient reaches the model only through unmasked labels. Schematic, no values.
+\begin{tikzpicture}[x=1cm, y=1cm, font=\sffamily\small,
+  box/.style={draw=black, line width=1pt, fill=white, align=center, font=\sffamily\small, inner sep=2pt,
+              minimum height=1cm, minimum width=1.75cm},
+  ours/.style={box, fill=pk!40, draw=dr, line width=1.2pt},
+  zone/.style={rounded corners=12pt, fill=#1!13, draw=#1!75!black, line width=1pt, dash pattern=on 4.5pt off 3pt},
+  arr/.style={-{Latex[length=2.2mm, width=1.7mm]}, line width=1pt, draw=black},
+  ztl/.style={font=\sffamily\small\bfseries, anchor=north west, inner sep=0pt}]
+\draw[zone=bz] (-0.15,1.25) rectangle (8.75,3.35);
+\draw[zone=yz] (-0.15,-1.3) rectangle (8.75,1.0);
+\node[ztl] at (0.1,3.15) {Baseline (unchanged)};
+\node[ztl] at (0.1,0.8) {ImparTail};
+\node[box] (v) at (1.0,2.05) {video\\frames};
+\node[box] (d) at (3.15,2.05) {object\\detector};
+\node[box] (m) at (5.3,2.05) {STTran};
+\node[box] (z) at (7.6,2.05) {relation\\logits $z$};
+\node[box] (y) at (1.0,-0.25) {labels $y$};
+\node[ours, minimum width=2.1cm] (a) at (3.6,-0.25) {mask $m$\\(Algorithm 1)};
+\node[ours, minimum width=2.1cm] (L) at (7.6,-0.25) {masked\\loss, Eq. (5)};
+\draw[arr] (v) -- (d); \draw[arr] (d) -- (m); \draw[arr] (m) -- (z);
+\draw[arr] (z) -- (L); \draw[arr] (y) -- (a); \draw[arr] (a) -- (L);
+\draw[-{Latex[length=2.2mm, width=1.7mm]}, line width=1pt, draw=dr, dash pattern=on 3pt off 2pt]
+  ([xshift=-0.45cm]L.north) |- (5.3,0.62) -- (m.south);
+\node[font=\sffamily\scriptsize\itshape, text=dr, anchor=east, align=right, inner sep=2pt] at (5.2,0.55) {gradient only via\\unmasked labels};
+\end{tikzpicture}
